@@ -1,15 +1,5 @@
-// import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-// import axios from 'axios';
-// import Toastify from 'toastify-js';
-// import { Clipboard } from '@capacitor/clipboard';
-
-
 
 const importText =   document.getElementById('import-text');
-// const bankersClick = document.getElementsByClassName('pubkeyAdd')[0];
-
-
-
 const formCreateAccount =   document.getElementById('create-new-form');
 const importTextButton = document.getElementById('import-text-button')
 const mobileImportTextButton = document.getElementById('mobile-import-text-button')
@@ -22,7 +12,6 @@ const creatorName = document.getElementById("creator-name");
 const creatorEmail = document.getElementById("creator-email");
 const creatorAddress = document.getElementById("creator-address");
 const minusButton = document.getElementById('address-amount');
-//const addMinus = document.getElementsByClassName('pubkeyAdd')[0]
 const withdrawalAddBtn = document.getElementById('withdrawal-plus-icon')
 const getbankerClick = document.getElementsByClassName('getbankerClick')[0]
 const getListClick = document.getElementsByClassName('getlistClick')[0]
@@ -38,9 +27,9 @@ let thirdTab = document.getElementById('third')
 let fourthTab = document.getElementById('fourth')
 let fifthTab = document.getElementById('sixth')
 
-// /**
-//   Import Text screen
-// **/
+/**
+  Import Text screen
+**/
 let importArea = document.getElementById('import-area')
 let bankerVerifyWithdrawal = document.getElementById('banker-verify-withdrawal')
 let bankerMessageSignTx = document.getElementById('banker-message-signtx-container')
@@ -379,7 +368,6 @@ function isEmailValid(email) {
 }
 
 async function listfile(evt) {
-    console.log("listfile: ", evt)
     const convertToJson = evt
     const accountBody = document.getElementById('accounts-list-body')
     const mobileAccountTableHead = document.getElementById('mobile-account-list-head')
@@ -1219,7 +1207,7 @@ async function accountBankerData() {
     // And filter bankers array with the value
     select.options.length = 0
     for(const key in bankersArray) {
-        if(bankersArray[key].pubkey){
+        if(bankersArray[key].pubkey && bankersArray[key].currency === ACCOUNT_CURRENCY){
         const opt = bankersArray[key].banker_email;
         const pub = bankersArray[key].pubkey;
         const el = document.createElement("option");
@@ -1681,12 +1669,7 @@ async function withdrawalApi(message) {
 
 	if (message.currency === "woodcoin") {
 		try {
-	    // const response = await axios(`https://api.logbin.org/api/broadcast/r?transaction=${txid}`, {
-      //   method: 'get',
-      //   headers: {
-      //       'Accept': 'application/json'
-      //   }
-      // });
+	  
       const apiUrl = `https://api.logbin.org/api/broadcast/r?transaction=${txid}`
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -1711,41 +1694,24 @@ async function withdrawalApi(message) {
       
       const body = response.data
       if (body.message) {
-        const dataJson = await Filesystem.readFile({
-            path: 'fscb/data.json',
-            directory: Directory.Documents,
-            encoding: Encoding.UTF8,
-        });
-        const accounts = dataJson.data
-        for (const [key, value] of Object.entries(accounts)) {
+        const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
+        if (accounts) {
+          for (const [key, value] of Object.entries(accounts)) {
             let account = value
-            console.log("account.id vs accountId: ", account.id, accountId)
             if (account.id == accountId) {
-              console.log("inside account: ")
               for (const [index, withdrawal] of account.withdrawals.entries()){
-                console.log("withdrawal.id vs withdrawalId: ", withdrawal.id, withdrawalId)
                 if (withdrawal.id == withdrawalId){
-                  console.log("inside withdrawal id")
                   withdrawal.date_broadcasted = Date.now()
                   withdrawal.txid = body.message.result
-                  console.log(withdrawal)
-                  // const updatedAccounts = JSON.stringify(accounts, null, 2)
-                  const writeAccount = await Filesystem.writeFile({
-                    path: 'fscb/data.json',
-                    data: accounts,
-                    directory: Directory.Documents,
-                    encoding: Encoding.UTF8,
-                  });
-                  if (writeAccount.uri) {
-                    console.log("withdrawal broadcasted. record updated")
-                  } else {
-                    console.log("updating withdrawal after successful broadcasting error: ", err)
-                  }
+                  
+                  localStorage.setItem("accounts", accounts)
+                  
                 }
               }
             }
           }
-        withdrawalBroadcastResponse(body)
+          withdrawalBroadcastResponse(body)
+        }
       }
 	  } catch(e) {
       console.log(e)
@@ -1809,12 +1775,8 @@ async function withdrawalApi(message) {
       }
       if (body.message) {
         console.log("body.message: ", body.message)
-        const dataJson = await Filesystem.readFile({
-            path: 'fscb/data.json',
-            directory: Directory.Documents,
-            encoding: Encoding.UTF8,
-        });
-        const accounts = dataJson.data
+        
+        const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
         for (const [key, value] of Object.entries(accounts)) {
           let account = value
           console.log("account.id vs accountId: ", account.id, accountId)
@@ -1827,18 +1789,13 @@ async function withdrawalApi(message) {
                 withdrawal.date_broadcasted = Date.now()
                 withdrawal.txid = body.data.hash
                 console.log(withdrawal)
-                // const updatedAccounts = JSON.stringify(accounts, null, 2)
-                const writeAccount = await Filesystem.writeFile({
-                  path: 'fscb/data.json',
-                  data: accounts,
-                  directory: Directory.Documents,
-                  encoding: Encoding.UTF8,
-                });
-                if (writeAccount.uri) {
-                  console.log("withdrawal broadcasted. record updated")
-                } else {
-                  console.log("updating withdrawal after successful broadcasting error: ", err)
-                }
+                
+                /**
+                 * Update the account record with the withdrawal txid
+                 */
+                localStorage.setItem("accounts", accounts)
+                console.log("withdrawal broadcasted. record updated")
+                
               }
             }
           }
@@ -1996,16 +1953,8 @@ async function ownerSaveNextBanker(data) {
 	let message = data.message
 	let next_banker = data.banker
 
-	console.log("data: ", data)
-  const bankerCheckResult = await readdir('data.json');
-	if (bankerCheckResult) {
-    const dataJson = await Filesystem.readFile({
-      path: 'fscb/data.json',
-      directory: Directory.Documents,
-      encoding: Encoding.UTF8,
-  });
-    const accounts = dataJson.data
-
+  const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
+	if (accounts) {
 		for (const [key, value] of Object.entries(accounts)) {
       let acct = value
       if (acct.id == account.id) {
@@ -2040,25 +1989,8 @@ async function ownerSaveNextBanker(data) {
 					  }
 					  withdrawal.signatures.push(newSignatory)
 
-					  // const accountsNewSignatory = JSON.stringify(accounts, null, 2)
-					  // fs.writeFile(homedir + "/data/data.json"
-					  //   , accountsNewSignatory, function writeJson(err) {
-					  //   if (err)  {
-					  //     console.log("updating signatures for next banker to sign error: ", err)
-					  //   } else {
-					  //     console.log("signature updated for next banker to sign: ")
-					  //     win.webContents.send('owner:show-banker-signature-message', newMessage)
-					  //   }
-					  // })
-            const writeAccount = await Filesystem.writeFile({
-                path: 'fscb/data.json',
-                data: accounts,
-                directory: Directory.Documents,
-                encoding: Encoding.UTF8,
-            });
-            if (writeAccount.uri) {
-              ownerShowBankerSignatureMessage(newMessage)
-            }
+            localStorage.setItem("accounts", accounts)
+            ownerShowBankerSignatureMessage(newMessage)
 
 					}
 				}
@@ -3225,18 +3157,13 @@ async function contractnew (options) {
 
   async function getredeemscriptRedeemscript(options) {
     console.log("options script: ", options.script)
-    const accounts = await Filesystem.readFile({
-        path: 'fscb/data.json',
-        directory: Directory.Documents,
-        encoding: Encoding.UTF8,
-      });
+    const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
     const accountFilter = Object.values(accounts.data).filter(value => {
       console.log(value);
       return value.redeem_script === options.script;
     });
     console.log("account filter: ", accountFilter)
     return accountFilter
-    // win.webContents.send('account:filterSig', JSON.stringify(accountFilter))
   };
 
 function closeSendSignatureScreen() {
@@ -3379,26 +3306,13 @@ function closeSendSignatureScreen() {
   }
 
 async function signatureEncode (data) {
-  const contents = await Filesystem.readFile({
-    path: 'fscb/data.json',
-    directory: Directory.Documents,
-    encoding: Encoding.UTF8,
-  });
-  const contentnew = contents.data
+  
+  const contentnew = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
   contentnew["contract" + data.id] = data.contract
-  // console.log("contents ", contentnew)
-  const writeAccount = await Filesystem.writeFile({
-      path: 'fscb/data.json',
-      data: contentnew,
-      directory: Directory.Documents,
-      encoding: Encoding.UTF8,
-  });
-  if (writeAccount.uri) {
-    const readmore = await Filesystem.readFile({
-        path: 'fscb/data.json',
-        directory: Directory.Documents,
-        encoding: Encoding.UTF8,
-      });
+  localStorage.setItem("accounts", contentnew)
+
+  const readmore = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
+  if (readmore) {
     listfile(readmore)
   }
 }
