@@ -179,13 +179,16 @@ refreshBtn.addEventListener("click", () => {
 function setAccountCurrency() {
   const coinCurrencySend = currency.options[currency.selectedIndex].text;
   ACCOUNT_CURRENCY = coinCurrencySend
+  console.log("account currency: ", ACCOUNT_CURRENCY)
   readBankersFile()
+  accountBankerData()
 }
 
 async function readBankersFile() {
-  const bankerCheckResult = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
-  if (bankerCheckResult) {
-    console.log("bankerCheckResult: ", bankerCheckResult)
+  const bankersArray = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
+  if (bankersArray) {
+    console.log("bankersArray: ", bankersArray)
+    
   }
   return
 }
@@ -494,7 +497,9 @@ function getAccountDetails(account){
 
 
       let tableBody = document.getElementById('account-bankers-list')
+      let mobileAccountBankersListBody = document.getElementById('mobile-account-bankers-list-body')
       tableBody.innerHTML = ''
+      mobileAccountBankersListBody.innerHTML = ''
       let bankers = account.bankers
       for(let x in bankers) {
         if(bankers.hasOwnProperty(x)){
@@ -506,8 +511,58 @@ function getAccountDetails(account){
           email.innerHTML = bankers[x].banker_email
           let publicKey = row.insertCell(2);
           publicKey.innerHTML = pubkey
+
+          /**
+            Mobile view account details bankers list
+          **/
+          let bodytr1 = document.createElement('tr')
+          bodytr1.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+          let headtd1 = document.createElement('td')
+          headtd1.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+          headtd1.innerHTML = "Name"
+          let bodytd1 = document.createElement('td')
+          bodytd1.setAttribute("class", "border-grey-light border p-3")
+          bodytd1.innerHTML = bankers[x].banker_name
+
+          let bodytr2 = document.createElement('tr')
+          bodytr2.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+          let headtd2 = document.createElement('td')
+          headtd2.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+          headtd2.innerHTML = "Email"
+          let bodytd2 = document.createElement('td')
+          bodytd2.setAttribute("class", "border-grey-light border p-3")
+          bodytd2.innerHTML = bankers[x].banker_email
+
+        
+          let bodytr3 = document.createElement('tr')
+          bodytr3.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+          let headtd3 = document.createElement('td')
+          headtd3.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+          headtd3.innerHTML = "Public key"
+          let bodytd3 = document.createElement('td')
+          bodytd3.setAttribute("class", "break-all whitespace-normal border-grey-light border p-3")
+          bodytd3.innerHTML = pubkey
+
+          let bodytr5 = document.createElement('tr')
+          bodytr5.setAttribute("height", "12px")
+
+          bodytr1.appendChild(headtd1)
+          bodytr1.appendChild(bodytd1)
+          bodytr2.appendChild(headtd2)
+          bodytr2.appendChild(bodytd2)
+          bodytr3.appendChild(headtd3)
+          bodytr3.appendChild(bodytd3)
+          
+          mobileAccountBankersListBody.appendChild(bodytr1)
+          mobileAccountBankersListBody.appendChild(bodytr2)
+          mobileAccountBankersListBody.appendChild(bodytr3)
+          mobileAccountBankersListBody.appendChild(bodytr5)
+          /**
+            End of Mobile view account details bankers list
+          **/
         }
       }
+
 
       // Generate action and withdrawal buttons
       let buttonContainer = document.getElementById('account-buttons')
@@ -516,7 +571,7 @@ function getAccountDetails(account){
       let viewActionsButton = document.createElement('button')
       viewActionsButton.classList.add("items-center", "m-2", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "text-white", "bg-orange-500", "rounded-full", "focus:ring-4", "focus:ring-yellow-200", "dark:focus:ring-yellow-900", "hover:bg-yellow-800")
       viewActionsButton.innerHTML = "Actions"
-      let actions = account.signatures
+      let actions = account.withdrawals
       viewActionsButton.addEventListener("click", function() {listAccountActions(actions);}, false);
 
       /**
@@ -548,6 +603,125 @@ function getAccountDetails(account){
     }
   }
 
+
+/**
+  Account Actions Screen
+  List request for signatures status
+**/
+
+function addNewlines(str) {
+  var result = '';
+  while (str.length > 0) {
+    result += str.substring(0, 75) + '\n';
+    str = str.substring(75);
+  }
+  return result;
+}
+
+function showTxId(txid) {
+  let message = "Transaction ID: " + txid
+  let messageLineBreaks = addNewlines(message)
+  alert(messageLineBreaks)
+}
+
+function listAccountActions(actions, signatureNeeded){
+  let accountDetails = document.getElementById('account-details')
+  let accountWithdrawal = document.getElementById('account-withdrawal')
+  let accountActions = document.getElementById('account-actions')
+  accountDetails.classList.add("hidden")
+  accountWithdrawal.classList.add("hidden")
+  accountActions.classList.remove("hidden")
+
+  let tableBody = document.getElementById('actions-list-body')
+  tableBody.innerHTML = ''
+
+  /**
+    Check if the withdrawal is ready for broadcasting
+  **/
+  for (const [index, withdrawal] of actions.entries()){
+    // console.log('withdrawal: ', withdrawal)
+    // console.log("has prop: ", withdrawal.hasOwnProperty('txid'))
+    for(let x in withdrawal.signatures) {
+      console.log("x: ", x)
+      if(withdrawal.signatures.hasOwnProperty(x)){
+        let row = tableBody.insertRow();
+        let id = row.insertCell(0);
+        id.innerHTML = withdrawal.id
+        let date = row.insertCell(1);
+        let dateReq
+        if (withdrawal.signatures[x].date_signed) {
+          dateReq = new Date(withdrawal.signatures[x].date_signed);
+        } else {
+          dateReq = new Date(withdrawal.signatures[x].date_requested);
+        }
+
+        //dateFormat = dateReq.toDateString() + ", "+ dateReq.getHours() + ":" + dateReq.getMinutes();
+        dateFormat = dateReq.toDateString()
+        date.innerHTML = dateFormat
+        let banker = row.insertCell(2);
+        banker.innerHTML = withdrawal.signatures[x].banker_name
+        let action = row.insertCell(3);
+        action.innerHTML = withdrawal.signatures[x].action
+        let txid = row.insertCell(4);
+        if (withdrawal.signatures[x].transaction_id) {
+          let id = 'view-txid-btn-' + String(withdrawal.id) + String(withdrawal.signatures[x].banker_id)
+          let viewBtn = "<button class='ml-4 disabled:opacity-75 bg-blue-500 active:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' id='"+id+"'>View</button>"
+          txid.innerHTML = viewBtn
+          let viewTxidBtn = document.getElementById(id)
+          viewTxidBtn.addEventListener('click', () => {
+            console.log("view ", withdrawal.signatures[x].transaction_id)
+            showTxId(withdrawal.signatures[x].transaction_id)
+          })
+        } else {
+          txid.innerHTML = ""
+        }
+        let status = row.insertCell(5);
+        status.innerHTML = withdrawal.signatures[x].status
+      }
+    }
+
+    if(withdrawal.hasOwnProperty('txid')){
+
+      let row = tableBody.insertRow();
+      let id = row.insertCell(0);
+      id.innerHTML = withdrawal.id
+      let date = row.insertCell(1);
+      let date_broadcasted = new Date(withdrawal.date_broadcasted)
+      dateFormat = date_broadcasted.toDateString()
+      date.innerHTML = dateFormat
+      let banker = row.insertCell(2);
+      banker.innerHTML = "Owner"
+      let action = row.insertCell(3);
+      action.innerHTML = "Withdrawal broadcasted"
+      let txid = row.insertCell(4);
+      let viewBtn = "<button class='ml-4 disabled:opacity-75 bg-blue-500 active:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' id='view-txid-btn'>View</button>"
+      txid.innerHTML = viewBtn
+      let viewTxidBtn = document.getElementById('view-txid-btn')
+      viewTxidBtn.addEventListener('click', () => showTxId(withdrawal.txid))
+      let status = row.insertCell(5);
+      status.innerHTML = "Success"
+    }
+  }
+}
+
+let actionsBackBtn = document.getElementById('account-actions-back-btn')
+actionsBackBtn.addEventListener('click', listAccountActionsBack)
+
+function listAccountActionsBack(){
+  console.log("actions back btn: ")
+  let accountDetails = document.getElementById('account-details')
+  let accountWithdrawal = document.getElementById('account-withdrawal')
+  let accountActions = document.getElementById('account-actions')
+  accountDetails.classList.remove("hidden")
+  accountWithdrawal.classList.add("hidden")
+  accountActions.classList.add("hidden")
+}
+/**
+  End of Account Actions
+**/
+
+
+
 /**
   Owner view - Account withdrawal
 **/
@@ -565,6 +739,7 @@ async function accountWithdrawalFunc(address){
       console.log("invalid currency")
     }
     const responseUnspent = await unspentApi(address)
+    console.log("responseUnspent: ", responseUnspent)
     const listP = responseUnspent.utxo
     const script = coin_js.script()
     const addressScript = script.decodeRedeemScript(address.redeemscript)
@@ -693,14 +868,7 @@ async function unspentApi(address) {
       try {
           
         const apiUrl = `https://api.logbin.org/api?address=${address.address}`
-        const response = await fetch(apiUrl, {
-          method: "GET",
-          headers: {
-            'Accept': 'application/json',
-            'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
-          },
-          
-        })
+        const response = await fetch(apiUrl)
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -708,17 +876,16 @@ async function unspentApi(address) {
           return response.json();
         })
         .then(data => {
-          console.log("fetch data: ", data);
+          console.log("fetch log data: ", data);
           return data
         })
         .catch(error => {
           console.error('fetch Error:', error);
         });
 
-        console.log(response)
-        if (response.status === 200) {
+        if (response.message) {
             const data = {
-              "utxo": response.data.message.address,
+              "utxo": response.message.address,
               "currency": address.currency
             }
             return data
@@ -1188,9 +1355,36 @@ async function bankersListView(evt) {
 }
 
 async function accountBankerData() {
-    const contents = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
+    const contents = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null;
+
     bankersArray = contents
     BANKERS = contents
+    
+    //
+    // Start of Banker's table
+    //
+    const bankersBody = document.getElementById('bankers-list-body')
+
+    bankersBody.innerHTML = ""
+    for(let x in bankersArray) {
+      if(bankersArray.hasOwnProperty(x)){
+          let pubkey = slicePubkey(bankersArray[x].pubkey)
+          let row = bankersBody.insertRow();
+          let name = row.insertCell(0);
+          name.innerHTML = bankersArray[x].banker_name
+          let email = row.insertCell(1);
+          email.innerHTML = bankersArray[x].banker_email
+          let pubKey = row.insertCell(2);
+          pubKey.innerHTML = pubkey
+          let currency = row.insertCell(3)
+          currency.innerHTML = bankersArray[x].currency
+      }
+    }
+    //
+    // End of Banker's table
+    //
+    
+    
     const selectDiv = document.getElementById('banker-select')
     selectDiv.innerHTML = ''
 
@@ -1206,8 +1400,9 @@ async function accountBankerData() {
     // Get the selected value for contract currency
     // And filter bankers array with the value
     select.options.length = 0
+    console.log("account currency: ", ACCOUNT_CURRENCY)
     for(const key in bankersArray) {
-        if(bankersArray[key].pubkey && bankersArray[key].currency === ACCOUNT_CURRENCY){
+      if(bankersArray[key].pubkey && bankersArray[key].currency === ACCOUNT_CURRENCY){
         const opt = bankersArray[key].banker_email;
         const pub = bankersArray[key].pubkey;
         const el = document.createElement("option");
@@ -1215,7 +1410,7 @@ async function accountBankerData() {
         el.value = pub;
         el.setAttribute('class', 'hidden')
         select.appendChild(el);
-        }
+      }
     }
 
     const selectOptions = select.querySelectorAll('option');
@@ -1606,9 +1801,10 @@ async function bankerSignatureResponse(message) {
 				        const date_signed = new Date()
 				        signature.date_signed = date_signed
 
-                const writeAccount = localStorage.setItem("accounts", accounts)
+                localStorage.setItem("accounts", JSON.stringify(accounts))
+                const writeAccount = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null
                 console.log("write account ", writeAccount)
-                if (writeAccount.uri) {
+                if (writeAccount) {
                   console.log("accounts updated")
                   // check number of signatures needed
                   const signatures = withdrawal.signatures.filter(val => val.transaction_id != "");
@@ -1692,7 +1888,7 @@ async function withdrawalApi(message) {
         console.error('fetch Error:', error);
       });
       
-      const body = response.data
+      const body = response
       if (body.message) {
         const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
         if (accounts) {
@@ -1704,7 +1900,7 @@ async function withdrawalApi(message) {
                   withdrawal.date_broadcasted = Date.now()
                   withdrawal.txid = body.message.result
                   
-                  localStorage.setItem("accounts", accounts)
+                  localStorage.setItem("accounts", JSON.stringify(accounts))
                   
                 }
               }
@@ -1755,7 +1951,7 @@ async function withdrawalApi(message) {
       .catch(error => {
         console.error('fetch Error:', error);
       });
-      const resp = response.data
+      const resp = response
       let body
 
       if (resp.data) {
@@ -1793,7 +1989,7 @@ async function withdrawalApi(message) {
                 /**
                  * Update the account record with the withdrawal txid
                  */
-                localStorage.setItem("accounts", accounts)
+                localStorage.setItem("accounts", JSON.stringify(accounts))
                 console.log("withdrawal broadcasted. record updated")
                 
               }
@@ -1989,7 +2185,7 @@ async function ownerSaveNextBanker(data) {
 					  }
 					  withdrawal.signatures.push(newSignatory)
 
-            localStorage.setItem("accounts", accounts)
+            localStorage.setItem("accounts", JSON.stringify(accounts))
             ownerShowBankerSignatureMessage(newMessage)
 
 					}
@@ -2473,7 +2669,7 @@ async function bankerPubkeyResponse(evt) {
         
           localStorage.setItem('bankers', JSON.stringify(bankersData))
           importText.value = ''
-          alertSuccess("Successfully added banker's publick key.")
+          alertSuccess("Successfully added banker's public key.")
         }
       }
     }else {
@@ -2545,13 +2741,16 @@ async function contractnew (options) {
     const getIdNumber = await idNumber()
     const mybankers = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
     let mergeBankers = []
+    console.log("options: ", options)
+    console.log("mybankers: ", mybankers)
     for (let i = 0; i < options.bankersMerge.length; i++ ) {
-      for (let j in mybankers.data) {
-        if (options.bankersMerge[i] === mybankers.data[j].pubkey) {
-          mergeBankers.push(mybankers.data[j])
+      for (let j in mybankers) {
+        if (options.bankersMerge[i] === mybankers[j].pubkey) {
+          mergeBankers.push(mybankers[j])
         }
       }
     }
+    console.log("mergeBankers: ", mergeBankers)
 
     let data = {
         "id": Math.floor(1000000000 + Math.random() * 9000000000),
@@ -2666,7 +2865,7 @@ async function contractnew (options) {
             headtd1.innerHTML = "Name"
             let bodytd1 = document.createElement('td')
             bodytd1.setAttribute("class", "border-grey-light border p-3")
-            bodytd1.innerHTML = convertToJson[x].contract_name
+            bodytd1.innerHTML = accounts[x].contract_name
 
             let bodytr2 = document.createElement('tr')
             bodytr2.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
@@ -2675,7 +2874,7 @@ async function contractnew (options) {
             headtd2.innerHTML = "Address"
             let bodytd2 = document.createElement('td')
             bodytd2.setAttribute("class", "break-all whitespace-normal border-grey-light border p-3")
-            bodytd2.innerHTML = coinInitial + ':' + convertToJson[x].address
+            bodytd2.innerHTML = coinInitial + ':' + accounts[x].address
 
           
             let bodytr3 = document.createElement('tr')
@@ -2685,7 +2884,7 @@ async function contractnew (options) {
             headtd3.innerHTML = "Balance"
             let bodytd3 = document.createElement('td')
             bodytd3.setAttribute("class", "border-grey-light border p-3")
-            bodytd3.innerHTML = convertToJson[x].balance
+            bodytd3.innerHTML = accounts[x].balance
 
             let bodytr4 = document.createElement('tr')
             bodytr4.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
@@ -2695,7 +2894,7 @@ async function contractnew (options) {
             let bodytd4 = document.createElement('td')
             bodytd4.setAttribute("class", "border-grey-light border p-3 text-center bg-orange-600")
             bodytd4.innerHTML = "View"
-            let mobileDetails = convertToJson[x]
+            let mobileDetails = accounts[x]
             bodytd4.addEventListener("click", function() {getAccountDetails(mobileDetails);}, false);
 
             bodytr1.appendChild(headtd1)
@@ -3158,8 +3357,8 @@ async function contractnew (options) {
   async function getredeemscriptRedeemscript(options) {
     console.log("options script: ", options.script)
     const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
-    const accountFilter = Object.values(accounts.data).filter(value => {
-      console.log(value);
+    const accountFilter = Object.values(accounts).filter(value => {
+      console.log("filter value", value);
       return value.redeem_script === options.script;
     });
     console.log("account filter: ", accountFilter)
@@ -3309,7 +3508,7 @@ async function signatureEncode (data) {
   
   const contentnew = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
   contentnew["contract" + data.id] = data.contract
-  localStorage.setItem("accounts", contentnew)
+  localStorage.setItem("accounts", JSON.stringify(contentnew))
 
   const readmore = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
   if (readmore) {
