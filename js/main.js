@@ -390,12 +390,13 @@ async function listfile(evt) {
         }
         let row = accountBody.insertRow();
         let name = row.insertCell(0);
-        name.setAttribute('class', 'pl-6')
+        name.setAttribute('class', 'text-center')
         name.innerHTML = convertToJson[x].contract_name
         let address = row.insertCell(1);
+        address.setAttribute('class', 'text-center')
         address.innerHTML = coinInitial + ':' + convertToJson[x].address
         let balance = row.insertCell(2);
-        balance.setAttribute('class', 'pl-4')
+        balance.setAttribute('class', 'text-center')
         balance.innerHTML = convertToJson[x].balance
         let veiwall = row.insertCell(3)
         veiwall.setAttribute('class', 'text-center')
@@ -624,6 +625,35 @@ function showTxId(txid) {
   alert(messageLineBreaks)
 }
 
+
+/**
+ * Account details
+ * Actions screen
+ * 
+ */
+
+function accountTxidDisplay(domElement, txid, w_id, banker_id, screen) {
+  //console.log("domElement: ", domElement)
+  if (txid) {
+    let id = screen === "web" ? 'view-txid-btn-' + String(w_id) + String(banker_id) : 'mobile-view-txid-btn-' + String(w_id) + String(banker_id)
+    console.log("id: ", id)
+    let viewBtn = "<button class='ml-4 disabled:opacity-75 bg-blue-500 active:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' id='"+id+"'>View</button>"
+    //console.log("viewBtn: ", viewBtn)
+    domElement.innerHTML = viewBtn
+    //console.log("domElement: ", domElement)
+    let viewTxidBtn = document.getElementById(id)
+    console.log("viewTxidBtn: ", viewTxidBtn)
+    if(viewTxidBtn) {
+      viewTxidBtn.addEventListener('click', () => {
+        console.log("view ", txid)
+        showTxId(txid)
+      })
+    }
+  } else {
+    domElement.innerHTML = ""
+  }
+}
+
 function listAccountActions(actions, signatureNeeded){
   let accountDetails = document.getElementById('account-details')
   let accountWithdrawal = document.getElementById('account-withdrawal')
@@ -633,7 +663,9 @@ function listAccountActions(actions, signatureNeeded){
   accountActions.classList.remove("hidden")
 
   let tableBody = document.getElementById('actions-list-body')
+  let mobileTableBody = document.getElementById('mobile-actions-list-body')
   tableBody.innerHTML = ''
+  mobileTableBody.innerHTML = ''
 
   /**
     Check if the withdrawal is ready for broadcasting
@@ -663,20 +695,107 @@ function listAccountActions(actions, signatureNeeded){
         let action = row.insertCell(3);
         action.innerHTML = withdrawal.signatures[x].action
         let txid = row.insertCell(4);
-        if (withdrawal.signatures[x].transaction_id) {
-          let id = 'view-txid-btn-' + String(withdrawal.id) + String(withdrawal.signatures[x].banker_id)
-          let viewBtn = "<button class='ml-4 disabled:opacity-75 bg-blue-500 active:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' id='"+id+"'>View</button>"
-          txid.innerHTML = viewBtn
-          let viewTxidBtn = document.getElementById(id)
-          viewTxidBtn.addEventListener('click', () => {
-            console.log("view ", withdrawal.signatures[x].transaction_id)
-            showTxId(withdrawal.signatures[x].transaction_id)
-          })
-        } else {
-          txid.innerHTML = ""
-        }
+        accountTxidDisplay(txid, withdrawal.signatures[x].transaction_id, withdrawal.id, withdrawal.signatures[x].banker_id, "web")
+        // if (withdrawal.signatures[x].transaction_id) {
+        //   let id = 'view-txid-btn-' + String(withdrawal.id) + String(withdrawal.signatures[x].banker_id)
+        //   let viewBtn = "<button class='ml-4 disabled:opacity-75 bg-blue-500 active:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' id='"+id+"'>View</button>"
+        //   txid.innerHTML = viewBtn
+        //   let viewTxidBtn = document.getElementById(id)
+        //   viewTxidBtn.addEventListener('click', () => {
+        //     console.log("view ", withdrawal.signatures[x].transaction_id)
+        //     showTxId(withdrawal.signatures[x].transaction_id)
+        //   })
+        // } else {
+        //   txid.innerHTML = ""
+        // }
         let status = row.insertCell(5);
         status.innerHTML = withdrawal.signatures[x].status
+
+
+        /**
+          Mobile view account list
+        **/
+        let bodytr1 = document.createElement('tr')
+        bodytr1.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+        let headtd1 = document.createElement('td')
+        headtd1.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+        headtd1.innerHTML = "ID"
+        let bodytd1 = document.createElement('td')
+        bodytd1.setAttribute("class", "border-grey-light border p-3")
+        bodytd1.innerHTML = withdrawal.id
+
+        let bodytr2 = document.createElement('tr')
+        bodytr2.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+        let headtd2 = document.createElement('td')
+        headtd2.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+        headtd2.innerHTML = "Date"
+        let bodytd2 = document.createElement('td')
+        bodytd2.setAttribute("class", "border-grey-light border p-3")
+        bodytd2.innerHTML = dateFormat
+
+      
+        let bodytr3 = document.createElement('tr')
+        bodytr3.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+        let headtd3 = document.createElement('td')
+        headtd3.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+        headtd3.innerHTML = "Banker"
+        let bodytd3 = document.createElement('td')
+        bodytd3.setAttribute("class", "break-all whitespace-normal border-grey-light border p-3")
+        bodytd3.innerHTML = withdrawal.signatures[x].banker_name
+
+        let bodytr4 = document.createElement('tr')
+        bodytr4.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+        let headtd4 = document.createElement('td')
+        headtd4.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+        headtd4.innerHTML = "Actions"
+        let bodytd4 = document.createElement('td')
+        bodytd4.setAttribute("class", "border-grey-light border p-3")
+        bodytd4.innerHTML = withdrawal.signatures[x].action
+
+        let bodytr5 = document.createElement('tr')
+        bodytr5.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+        let headtd5 = document.createElement('td')
+        headtd5.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+        headtd5.innerHTML = "Txid"
+        let bodytd5 = document.createElement('td')
+        bodytd5.setAttribute("class", "border-grey-light border p-3")
+        //accountTxidDisplay(bodytd5, withdrawal.signatures[x].transaction_id, withdrawal.id, withdrawal.signatures[x].banker_id, "mobile")
+        //bodytd5.innerHTML = bankersArray[x].currency
+
+        let bodytr6 = document.createElement('tr')
+        bodytr6.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
+        let headtd6 = document.createElement('td')
+        headtd6.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
+        headtd6.innerHTML = "Status"
+        let bodytd6 = document.createElement('td')
+        bodytd6.setAttribute("class", "border-grey-light border p-3")
+        bodytd6.innerHTML = withdrawal.signatures[x].status
+
+        let bodytr7 = document.createElement('tr')
+        bodytr7.setAttribute("height", "12px")
+
+        bodytr1.appendChild(headtd1)
+        bodytr1.appendChild(bodytd1)
+        bodytr2.appendChild(headtd2)
+        bodytr2.appendChild(bodytd2)
+        bodytr3.appendChild(headtd3)
+        bodytr3.appendChild(bodytd3)
+        bodytr4.appendChild(headtd4)
+        bodytr4.appendChild(bodytd4)
+        bodytr5.appendChild(headtd5)
+        bodytr5.appendChild(bodytd5)
+        bodytr6.appendChild(headtd6)
+        bodytr6.appendChild(bodytd6)
+        
+        mobileTableBody.appendChild(bodytr1)
+        mobileTableBody.appendChild(bodytr2)
+        mobileTableBody.appendChild(bodytr3)
+        mobileTableBody.appendChild(bodytr4)
+        mobileTableBody.appendChild(bodytr5)
+        mobileTableBody.appendChild(bodytr6)
+        mobileTableBody.appendChild(bodytr7)
+
+        accountTxidDisplay(bodytd5, withdrawal.signatures[x].transaction_id, withdrawal.id, withdrawal.signatures[x].banker_id, "mobile")
       }
     }
 
@@ -792,7 +911,7 @@ async function accountWithdrawalFunc(address){
                 // console.log("tx log test: ", tx.serialize())
                 let div = document.createElement('div')
                 div.setAttribute('id', 'inner-unspent')
-                div.setAttribute('class', 'grid md:grid-cols-4 gap-3')
+                div.setAttribute('class', 'grid grid-cols-4 gap-3')
                 let input1 = document.createElement('input')
                 input1.setAttribute('class', 'col-span-2 txid-withdraw text-black text-base text-normal p-1')
                 input1.setAttribute('id', 'txid-withdraw')
@@ -2837,12 +2956,13 @@ async function contractnew (options) {
             }
             let row = accountBody.insertRow();
             let name = row.insertCell(0);
-            name.setAttribute('class', 'pl-6')
+            name.setAttribute('class', 'text-center')
             name.innerHTML = accounts[x].contract_name
             let address = row.insertCell(1);
+            address.setAttribute('class', 'text-center')
             address.innerHTML = coinInitial + ':' + accounts[x].address
             let balance = row.insertCell(2);
-            balance.setAttribute('class', 'pl-4')
+            balance.setAttribute('class', 'text-center')
             balance.innerHTML = accounts[x].balance
             let veiwall = row.insertCell(3)
             veiwall.setAttribute('class', 'text-center')
@@ -3146,10 +3266,6 @@ async function contractnew (options) {
     /**
       Disabled automatic addition of change address
     **/
-    // let change = unspentindexsum - userinputsum
-    // console.log("change: ", change)
-    // let change_amount = change - WITHDRAWAL_FEE
-    // console.log("change_amount: ", change_amount)
     if (changeAmount) {
       console.log('add ouput: ', CHANGE_ADDRESS, changeAmount)
       tx.addoutput(CHANGE_ADDRESS, changeAmount)
@@ -3182,46 +3298,29 @@ async function contractnew (options) {
       for (let i = 0; i < inputs.length; i++) {
         var s = deserializeTx.extractScriptKey(i);
         let input = inputs[i]
-        console.log("s: ", s.script)
-        console.log("N: ", input.outpoint.index)
-        console.log(input.outpoint.hash)
 
-        // let row = inputsTable.insertRow();
-        // let txid = row.insertCell(0);
-        // txid.innerHTML = input.outpoint.hash
-        // txid.setAttribute('width', '45%')
-        // let indexNo = row.insertCell(1);
-        // indexNo.innerHTML = input.outpoint.index
-        // indexNo.setAttribute('width', '10%')
-        // let script = row.insertCell(2);
-        // script.innerHTML = s.script
-        // script.setAttribute('width', '45%')
+        let div = document.createElement('div')
+        div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
         let inputs1 = document.createElement('input')
         inputs1.setAttribute('readonly', true)
-        inputs1.setAttribute('class', 'md:flex px-3 bg-gray-300 text-black h-10 left-96 py-2 w-96');
+        inputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
         inputs1.value = input.outpoint.hash
-        let row = inputsTable.insertRow();
-        let txid = row.insertCell(0);
-        // txid.innerHTML = input.outpoint.hash
-        txid.appendChild(inputs1)
-        txid.setAttribute('width', '45%')
+        
         let inputs2 = document.createElement('input')
         inputs2.setAttribute('readonly', true)
-        inputs2.setAttribute('class', 'text-black text-center');
+        inputs2.setAttribute('class', 'col-span-1 text-center');
         inputs2.value = input.outpoint.index
-        let indexNo = row.insertCell(1);
-        indexNo.setAttribute('class', 'text-center bg-white text-black font-semibold')
-        indexNo.innerHTML = input.outpoint.index
-        // indexNo.appendChild(inputs2)
-        indexNo.setAttribute('width', '10%')
+        
         let inputs3 = document.createElement('input')
         inputs3.setAttribute('readonly', true)
-        inputs3.setAttribute('class', 'md:flex bg-gray-300 pl-1 h-10 text-black px-3 py-2 w-full');
+        inputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
         inputs3.value = s.script
-        let script = row.insertCell(2);
-        // script.innerHTML = s.script
-        script.appendChild(inputs3)
-        script.setAttribute('width', '45%')
+        
+        div.appendChild(inputs1)
+        div.appendChild(inputs2)
+        div.appendChild(inputs3)
+
+        inputsTable.appendChild(div)
       }
 
       for (let i = 0; i < outputs.length; i++) {
@@ -3239,16 +3338,39 @@ async function contractnew (options) {
           console.log("address: ", data)
           console.log("amount: ", (output.value/100000000).toFixed(8))
           console.log("script: ", Crypto.util.bytesToHex(output.script.buffer))
-          let row = outputsTable.insertRow();
-          let address = row.insertCell(0);
-          address.innerHTML = data
-          address.setAttribute('width', '45%')
-          let amount = row.insertCell(1);
-          amount.innerHTML = (output.value/100000000).toFixed(8)
-          amount.setAttribute('width', '10%')
-          let script = row.insertCell(2);
-          script.innerHTML = Crypto.util.bytesToHex(output.script.buffer)
-          script.setAttribute('width', '45%')
+          // let row = outputsTable.insertRow();
+          // let address = row.insertCell(0);
+          // address.innerHTML = data
+          // address.setAttribute('width', '45%')
+          // let amount = row.insertCell(1);
+          // amount.innerHTML = (output.value/100000000).toFixed(8)
+          // amount.setAttribute('width', '10%')
+          // let script = row.insertCell(2);
+          // script.innerHTML = Crypto.util.bytesToHex(output.script.buffer)
+          // script.setAttribute('width', '45%')
+
+          let div = document.createElement('div')
+          div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
+          let inputs1 = document.createElement('input')
+          inputs1.setAttribute('readonly', true)
+          inputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
+          inputs1.value = data
+          
+          let inputs2 = document.createElement('input')
+          inputs2.setAttribute('readonly', true)
+          inputs2.setAttribute('class', 'col-span-1 text-sm text-center');
+          inputs2.value = (output.value/100000000).toFixed(8)
+          
+          let inputs3 = document.createElement('input')
+          inputs3.setAttribute('readonly', true)
+          inputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
+          inputs3.value = Crypto.util.bytesToHex(output.script.buffer)
+          
+          div.appendChild(inputs1)
+          div.appendChild(inputs2)
+          div.appendChild(inputs3)
+
+          inputsTable.appendChild(div)
         } else {
 
           var addr = '';
@@ -3263,25 +3385,30 @@ async function contractnew (options) {
             coinjs.pub = pub;
           }
 
-          console.log("address: ", addr)
-          console.log("amount: ", (output.value/100000000).toFixed(8))
-          console.log("script: ", Crypto.util.bytesToHex(output.script.buffer))
-          let row = outputsTable.insertRow();
-          let address = row.insertCell(0);
-          address.setAttribute('width', '45%')
-          address.innerHTML = addr
-          let amount = row.insertCell(1);
-          amount.innerHTML = (output.value/100000000).toFixed(8)
-          amount.setAttribute('width', '10%')
-          let script = row.insertCell(2);
-          script.innerHTML = Crypto.util.bytesToHex(output.script.buffer)
-          script.setAttribute('width', '45%')
+          let div = document.createElement('div')
+          div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
+          let inputs1 = document.createElement('input')
+          inputs1.setAttribute('readonly', true)
+          inputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
+          inputs1.value = addr
+          
+          let inputs2 = document.createElement('input')
+          inputs2.setAttribute('readonly', true)
+          inputs2.setAttribute('class', 'col-span-1 text-sm text-center');
+          inputs2.value = (output.value/100000000).toFixed(8)
+          
+          let inputs3 = document.createElement('input')
+          inputs3.setAttribute('readonly', true)
+          inputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
+          inputs3.value = Crypto.util.bytesToHex(output.script.buffer)
+          
+          div.appendChild(inputs1)
+          div.appendChild(inputs2)
+          div.appendChild(inputs3)
+
+          outputsTable.appendChild(div)
         }
       }
-    //   ipcRenderer.on('account:filterSig', (e, evt) => {
-    //     console.log(evt)
-    //     accountSigFilter = evt
-    //   })
 
       const generateButton = document.getElementById('generate-request-signature-message')
       generateButton.addEventListener('click', function() {

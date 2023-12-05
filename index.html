@@ -7,6 +7,7 @@
       name="viewport"
       content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
+
     <!-- <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-tap-highlight" content="no" /> -->
 
@@ -318,17 +319,17 @@
               <table class="hidden md:inline-table relative w-full border-collapse border border-slate-400 text-left text-sm font-normal text-black bg-white left-1">
                 <thead class="relative w-full border-b pr-2 font-medium text-black dark:border-neutral-500">
                   <tr>
-                    <th scope="col" class="border border-slate-500 px-6 py-2">Account Name</th>
-                    <th scope="col" class="border border-slate-500 px-32 py-2">Address</th>
-                    <th scope="col" class="border border-slate-500 px-6 py-2">Balance</th>
-                    <th scope="col" class="border border-slate-500 px-6 py-2">View Detail</th>
+                    <th scope="col" class="text-center border border-slate-500 py-2">Account Name</th>
+                    <th scope="col" class="text-center border border-slate-500 py-2">Address</th>
+                    <th scope="col" class="text-center border border-slate-500 py-2">Balance</th>
+                    <th scope="col" class="text-center border border-slate-500 py-2">View Detail</th>
                   </tr>
                 </thead>
                 <tbody id="accounts-list-body">
                 </tbody>
               </table>
 
-              <table id="mobile-account-list" class="block md:hidden w-full flex flex-row flex-no-wrap sm:bg-white overflow-hidden sm:shadow-lg my-5">
+              <table id="mobile-account-list" class="table-auto md:hidden w-full flex-no-wrap sm:bg-white overflow-hidden sm:shadow-lg my-5">
                 <tbody id="mobile-account-list-body" class="flex-1 sm:flex-none"></tbody>
               </table>
 
@@ -364,7 +365,7 @@
 
               </table>
 
-              <table id="mobile-account-bankers-list" class="block md:hidden w-full flex flex-row flex-no-wrap text-white overflow-hidden sm:shadow-lg my-5">
+              <table id="mobile-account-bankers-list" class="table-auto md:hidden w-full flex-no-wrap text-white overflow-hidden sm:shadow-lg my-5">
                 <tbody id="mobile-account-bankers-list-body" class="flex-1 sm:flex-none"></tbody>
               </table>
 
@@ -375,7 +376,7 @@
             <div id="account-actions" class="hidden">
               <h1>Account actions</h1>
               <div class=" max-h-[420px] overflow-y-auto">
-                <table class="min-w-full text-left text-sm font-light text-white">
+                <table class="hidden md:inline-table min-w-full text-left text-sm font-light text-white">
                   <thead class="border-b font-medium dark:border-neutral-500">
                     <tr>
                       <th scope="col" class="px-6 py-4">ID</th>
@@ -389,6 +390,11 @@
                   <tbody id="actions-list-body">
                   </tbody>
                 </table>
+
+                <table id="mobile-actions-list" class="table-auto md:hidden w-full flex-no-wrap text-white overflow-hidden sm:shadow-lg my-5">
+                  <tbody id="mobile-actions-list-body" class="flex-1 sm:flex-none"></tbody>
+                </table>
+
               </div>
               <div class="flex justify-end">
                 <button
@@ -415,23 +421,23 @@
                </div>
                <!--Body of list unspent-->
                <div class="grid mb-4 mt-4 font-normal text-xl gap-2" id="list-unspent"></div>
-               <form id="withdraw-submit" class="mt-28">
+               <form id="withdraw-submit" class="mt-12 md:mt-28">
                   <div id="address-amount">
                      <div class="flex justify-end">
                        <p id="donate-button" class="cursor-pointer text-base text-orange-500">Donate</p>
                      </div>
-                     <div class="flex mt-5 gap-2">
-                       <div class="flex-auto w-64 text-sm"><label>Address</label></div>
-                       <div class="flex-auto w-64 text-sm"><label>Amount</label></div>
+                     <div class="grid grid-cols-4 gap-4">
+                       <div class="col-span-2 text-sm"><label>Address</label></div>
+                       <div class="col-span-2 text-sm"><label>Amount</label></div>
                      </div>
-                     <div class="pl-2 grid grid-cols-4 gap-2 -mx-2 space-y-4 md:space-y-0 top-10 text-sm" id="address-keys">
+                     <div class="pl-2 grid grid-cols-4 gap-2 -mx-2 text-sm" id="address-keys">
 
                        <input
                         type="text"
                         required
                         placeholder="Enter Address"
                         id="withdraw-address"
-                        class="relative grid col-span-2 h-10 w-full text-base text-black font-normal placeholder-gray-600 border focus:shadow-outline">
+                        class="col-span-2 h-10 w-full text-base text-black font-normal placeholder-gray-600 border focus:shadow-outline">
 
                        <input
                         type="number"
@@ -440,7 +446,7 @@
                         min=0
                         placeholder="Enter Amount"
                         id="withdraw-amount"
-                        class="relative grid col-span-1 h-10 w-full text-base font-normal text-black placeholder-gray-600 border focus:shadow-outline user-input-amount">
+                        class="col-span-1 h-10 w-full text-base font-normal text-black placeholder-gray-600 border focus:shadow-outline user-input-amount">
 
                        <img src="./assets/imgs/plus.svg" id="withdrawal-plus-icon" class="pubkeyAdd green cursor-pointer h-11" width="50" height="50" />
                      </div>
@@ -473,30 +479,38 @@
               <h1 class="text-white">Withdrawal Reference</h1>
               <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
               <div>
-                <table class="min-w-full text-left text-sm font-light mt-2">
-                  <thead class="border-b font-medium dark:border-neutral-500">
-                    <div before="Inputs" of Bankers class="before:content-[attr(before)] mt-24"></div><tr>
-                      <th scope="col" class="px-6 py-4">TxId</th>
-                      <th scope="col" class="px-6 py-4">N</th>
-                      <th scope="col" class="px-6 py-4">Script</th>
-                    </tr>
-                  </thead>
-                  <tbody id="banker-verify-inputs-initial">
-                  </tbody>
-                </table>
+                <div class="mt-12 font-bold text-large">Inputs</div>
+                <!--Header for list unspent--->
+                <div class="grid grid-cols-7 gap-4 text-sm mt-4">
+                  <div class="col-span-3">
+                    <label for="">Txid</label>
+                  </div>
+                  <div class="col-span-1">
+                    <label for="">N</label>
+                  </div>
+                  <div class="col-span-3">
+                    <label for="">Script</label>
+                  </div>
+                </div>
+                <!--Body of list unspent-->
+                <div class="mb-4 mt-4 font-normal text-xl gap-2" id="banker-verify-inputs-initial"></div>
               </div>
-              <div>
-                <table class="min-w-full text-left text-sm font-light mt-2">
-                  <thead class="border-b font-medium dark:border-neutral-500">
-                    <div before="Outputs" of Bankers class="before:content-[attr(before)] mt-24"></div><tr>
-                      <th scope="col" class="px-6 py-4">Address</th>
-                      <th scope="col" class="px-6 py-4">Amount</th>
-                      <th scope="col" class="px-6 py-4">Script</th>
-                    </tr>
-                  </thead>
-                  <tbody id="banker-verify-outputs-initial">
-                  </tbody>
-                </table>
+              <div class="mt-8 md:mt-12">
+                <div class="font-bold text-large">Outputs</div>
+                <!--Header for outputs--->
+                <div class="grid grid-cols-7 gap-4 text-sm mt-4">
+                  <div class="col-span-3">
+                    <label for="">Address</label>
+                  </div>
+                  <div class="col-span-1">
+                    <label for="">Amount</label>
+                  </div>
+                  <div class="col-span-3">
+                    <label for="">Script</label>
+                  </div>
+                </div>
+                <!--Body of outputs list-->
+                <div class="mb-4 mt-4 font-normal text-xl gap-2" id="banker-verify-outputs-initial"></div>
               </div>
               <div class="flex justify-end">
                 <button
@@ -655,7 +669,7 @@
                 </tbody>
               </table>
 
-              <table id="mobile-bankers-list" class="block md:hidden w-full flex flex-row flex-no-wrap sm:bg-white overflow-hidden sm:shadow-lg my-5">
+              <table id="mobile-bankers-list" class="table-auto md:hidden w-full flex-no-wrap sm:bg-white overflow-hidden sm:shadow-lg my-5">
                 <tbody id="mobile-bankers-list-body" class="flex-1 sm:flex-none"></tbody>
               </table>
             </div>
