@@ -113,8 +113,8 @@
 
 
         <!-- Tab Contents -->
-        <div class="col-span-12 md:col-span-9 h-screen bg-[#1a1a1a]" id="tab-contents" >
-          <div id="importText" class="hidden p-4">
+        <div class="px-2 md:px-12 col-span-12 md:col-span-9 h-screen bg-[#1a1a1a]" id="tab-contents" >
+          <div id="importText" class="hidden p-2 md:p-4">
             <div class="mx-auto max-h-80" id="import-area">
               <p class="text-xl text-white font-bold">Welcome to FSCB</p>
               <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
@@ -222,10 +222,11 @@
             <!--End of Bankers View - Private key generation-->
 
             <!--Bankers view - Verify Withdrawal-->
-            <div class="hidden p-4 text-xl text-white font-bold" id="banker-verify-withdrawal">
-              Verify Withdrawal
+            <div class="hidden p-0 md:p-4 text-xl text-white font-bold" id="banker-verify-withdrawal">
+              <h1 class="text-white">Verify Withdrawal</h1>
               <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
-              <div>
+              
+              <!-- <div>
                 <table class="min-w-full text-left text-sm font-light mt-2">
                   <thead class="border-b font-medium dark:border-neutral-500">
                     <div before="Inputs" of Bankers class="before:content-[attr(before)] mt-24"></div><tr>
@@ -237,8 +238,27 @@
                   <tbody id="banker-verify-inputs">
                   </tbody>
                 </table>
-              </div>
+              </div> -->
+
               <div>
+                <div class="mt-8 md:mt-12 font-bold text-large">Inputs</div>
+                <!--Header for list unspent--->
+                <div class="grid grid-cols-7 gap-4 text-sm mt-4">
+                  <div class="col-span-3">
+                    <label for="">Txid</label>
+                  </div>
+                  <div class="col-span-1">
+                    <label for="">N</label>
+                  </div>
+                  <div class="col-span-3">
+                    <label for="">Script</label>
+                  </div>
+                </div>
+                <!--Body of list unspent-->
+                <div class="mb-4 mt-4 font-normal text-xl gap-2" id="banker-verify-inputs"></div>
+              </div>
+
+              <!-- <div>
                 <table class="min-w-full text-left text-sm font-light mt-2">
                   <thead class="border-b font-medium dark:border-neutral-500">
                     <div before="Outputs" of Bankers class="before:content-[attr(before)] mt-24"></div><tr>
@@ -250,7 +270,27 @@
                   <tbody id="banker-verify-outputs">
                   </tbody>
                 </table>
+              </div> -->
+              
+              
+              <div class="mt-8 md:mt-12">
+                <div class="font-bold text-large">Outputs</div>
+                <!--Header for outputs--->
+                <div class="grid grid-cols-7 gap-4 text-sm mt-4">
+                  <div class="col-span-3">
+                    <label for="">Address</label>
+                  </div>
+                  <div class="col-span-1">
+                    <label for="">Amount</label>
+                  </div>
+                  <div class="col-span-3">
+                    <label for="">Script</label>
+                  </div>
+                </div>
+                <!--Body of outputs list-->
+                <div class="mb-4 mt-4 font-normal text-xl gap-2" id="banker-verify-outputs"></div>
               </div>
+
               <div class="mt-8">
                 <p>Enter WIF Private key</p>
                 <input type="text" id="banker-pivkey-for-signature" class="col-span-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
@@ -266,7 +306,7 @@
               <p class="text-xl text-white font-bold">Response to Withdrawal Signature request</p>
               <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
               <p class="text-l text-white my-1" id="sign-response-title"></p>
-              <div class="bg-white font-normal text-base p-8 max-h-[420px] overflow-y-auto" id="banker-message-signtx-body">
+              <div class="bg-white font-normal text-base p-2 md:p-8 max-h-[420px] overflow-y-auto" id="banker-message-signtx-body">
               </div>
               <div id="banker-message-signtx-close-button" class="flex justify-end"></div>
             </div>
@@ -309,7 +349,7 @@
             <!-- End of Owners view - Next banker for signature-->
 
           </div>
-          <div id="first" class="p-3 md:p-2 text-white font-bold text-xl leading-relaxed">
+          <div id="first" class="p-0 md:p-2 text-white font-bold text-xl leading-relaxed">
             <div id="accounts-list">
               Account list
               <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
@@ -329,7 +369,7 @@
                 </tbody>
               </table>
 
-              <table id="mobile-account-list" class="table-auto md:hidden w-full flex-no-wrap sm:bg-white overflow-hidden sm:shadow-lg my-5">
+              <table id="mobile-account-list" class="table-auto md:hidden flex-wrap sm:bg-white overflow-hidden sm:shadow-lg my-5">
                 <tbody id="mobile-account-list-body" class="flex-1 sm:flex-none"></tbody>
               </table>
 
@@ -448,7 +488,10 @@
                         id="withdraw-amount"
                         class="col-span-1 h-10 w-full text-base font-normal text-black placeholder-gray-600 border focus:shadow-outline user-input-amount">
 
-                       <img src="./assets/imgs/plus.svg" id="withdrawal-plus-icon" class="pubkeyAdd green cursor-pointer h-11" width="50" height="50" />
+                        <div class="flex justify-center">
+                          <img src="./assets/imgs/plus.svg" id="withdrawal-plus-icon" class="pubkeyAdd green cursor-pointer h-11" width="50" height="50" />
+                        </div> 
+                       
                      </div>
 
                   </div>
@@ -461,7 +504,7 @@
                       min=0
                       placeholder="0.001"
                       id="withdraw-fee"
-                      class="text-black font-normal h-10 w-64">
+                      class="text-black text-sm font-normal h-10 w-64">
 
                     </div>
                   </div>
@@ -539,7 +582,7 @@
             <div id="send-signature" class="hidden">
               <h1 class="text-white">Transaction Signature</h1>
               <br>
-              <div id="request-sig-message" class="bg-white text-gray-600 break-all p-8 text-base font-normal max-h-[420px] overflow-y-auto"></div>
+              <div id="request-sig-message" class="bg-white text-gray-600 break-all p-2 md:p-8 text-base font-normal max-h-[420px] overflow-y-auto"></div>
               <div class="flex justify-end">
                 <button
                   id="send-signature-close-btn"
@@ -587,21 +630,21 @@
                     <!-- <input type="text" id="bankers-name" class="col-span-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 banker-name" placeholder="Bankers Name">
 
                     <input type="text" id="bankers-email" class="col-span-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 banker-email" placeholder="Bankers Email"> -->
-                  <div class="flex justify-between align-top cols-2 mt-10 multikeysInner">
+                  <div class="flex flex-col md:flex-row justify-between mt-2 md:mt-10 multikeysInner">
                      <!-- <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/> -->
-                    <div class="col-span-1 text-white text-base font-bold py-2 mt-5">
-                      <label class="w-full pr-4 right-1 left-96 -top-44" for="#releaseCoins">Select banker</label>
-                      <div class="col-span-12 mt-4 text-gray-500 text-xs font-semibold py-1 m-1 relative w-full" id="banker-select">
+                    <div class="w-full md:w-60 text-white text-base font-bold py-2 mt-5">
+                      <label class="w-full" for="#releaseCoins">Select banker</label>
+                      <div class="mt-4 text-gray-500 text-xs font-semibold py-1 w-full" id="banker-select">
                       <!-- <select data-placeholder="Choose Bankers" multiple>
                         <option value="" disabled selected hidden>Choose Bankers</option>
                       </select> -->
                       </div>
                     </div>
-                    <a class="pubkeyAdd"><object width="50" height="50" class="green" id="img-anchor"></object></a>
-                    <div class="col-span-1 text-white text-base font-bold py-2 mt-5">
-                      <label class="w-full pr-4 right-1 left-96 -top-44" for="#releaseCoins">Amount of signatures required to release the coins</label>
-                      <div class="pr-4 left-96 col-span-3 py-2 text-black font-lg">
-                        <select id="releaseCoins" class="w-96 right-2 mt-4 -top-36 py-3 px-44 border-gray-400">
+                    <!-- <a class="pubkeyAdd"><object width="50" height="50" class="green" id="img-anchor"></object></a> -->
+                    <div class="text-white text-base font-bold py-2 mt-5">
+                      <label class="w-full" for="#releaseCoins">Amount of signatures required to release the coins</label>
+                      <div class="py-2 text-black font-lg">
+                        <select id="releaseCoins" class="w-full mt-4 py-3 text-center border-gray-400">
                           <option>1</option>
                           <option selected>2</option>
                           <option>3</option>
@@ -623,7 +666,7 @@
                     </div>
                   </div>
                   <div class="flex justify-end">
-                    <button type="submit" class="items-center px-10 py-2.5 text-base font-medium text-center w-32 mt-52 text-white bg-orange-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-orange-500 hover:bg-orange-500 rounded-full">Submit</button>
+                    <button type="submit" class="items-center px-10 py-2.5 text-base font-medium text-center w-32 mt-20 md:mt-52 text-white bg-orange-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-orange-500 hover:bg-orange-500 rounded-full">Submit</button>
                   </div>
               </div>
 

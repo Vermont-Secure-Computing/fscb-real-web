@@ -390,7 +390,7 @@ async function listfile(evt) {
         }
         let row = accountBody.insertRow();
         let name = row.insertCell(0);
-        name.setAttribute('class', 'text-center')
+        name.setAttribute('class', 'text-center py-2')
         name.innerHTML = convertToJson[x].contract_name
         let address = row.insertCell(1);
         address.setAttribute('class', 'text-center')
@@ -412,7 +412,7 @@ async function listfile(evt) {
           Mobile view account list
         **/
         let bodytr1 = document.createElement('tr')
-        bodytr1.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
+        bodytr1.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-sm font-normal")
         let headtd1 = document.createElement('td')
         headtd1.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
         headtd1.innerHTML = "Name"
@@ -421,7 +421,7 @@ async function listfile(evt) {
         bodytd1.innerHTML = convertToJson[x].contract_name
 
         let bodytr2 = document.createElement('tr')
-        bodytr2.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
+        bodytr2.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-sm font-normal")
         let headtd2 = document.createElement('td')
         headtd2.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
         headtd2.innerHTML = "Address"
@@ -431,7 +431,7 @@ async function listfile(evt) {
 
       
         let bodytr3 = document.createElement('tr')
-        bodytr3.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
+        bodytr3.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-sm font-normal")
         let headtd3 = document.createElement('td')
         headtd3.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
         headtd3.innerHTML = "Balance"
@@ -440,7 +440,7 @@ async function listfile(evt) {
         bodytd3.innerHTML = convertToJson[x].balance
 
         let bodytr4 = document.createElement('tr')
-        bodytr4.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
+        bodytr4.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-sm font-normal")
         let headtd4 = document.createElement('td')
         headtd4.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
         headtd4.innerHTML = "Actions"
@@ -913,7 +913,7 @@ async function accountWithdrawalFunc(address){
                 div.setAttribute('id', 'inner-unspent')
                 div.setAttribute('class', 'grid grid-cols-4 gap-3')
                 let input1 = document.createElement('input')
-                input1.setAttribute('class', 'col-span-2 txid-withdraw text-black text-base text-normal p-1')
+                input1.setAttribute('class', 'col-span-2 txid-withdraw text-black text-sm md:text-base text-normal p-1')
                 input1.setAttribute('id', 'txid-withdraw')
                 input1.value = listPTXID
                 let input2 = document.createElement('input')
@@ -922,12 +922,12 @@ async function accountWithdrawalFunc(address){
                 input2.setAttribute('id', 'vout-withdraw')
                 input2.value = listPvout
                 let input3 = document.createElement('input')
-                input3.setAttribute('class', 'text-black text-base text-normal')
+                input3.setAttribute('class', 'text-black text-sm md:text-base text-normal')
                 input3.setAttribute('class', 'hidden')
                 input3.setAttribute('id', 'script-withdraw')
                 input3.value = addressScript.redeemscript
                 let input4 = document.createElement('input')
-                input4.setAttribute('class', 'col-span-1 text-black text-base text-normal p-1')
+                input4.setAttribute('class', 'col-span-1 text-black text-sm md:text-base text-normal p-1')
                 input4.setAttribute('id', 'amount-withdraw')
                 input4.value = listPAmount
                 let input5 = document.createElement('input')
@@ -1534,7 +1534,7 @@ async function accountBankerData() {
 
     const selectOptions = select.querySelectorAll('option');
     const newSelect = document.createElement('div');
-    newSelect.setAttribute('class', 'selectMultiple bg-white w-60 relative')
+    newSelect.setAttribute('class', 'selectMultiple bg-white w-full relative')
     const active = document.createElement('div');
     // active.classList.add('active');
     // active.setAttribute('class', 'relative z-2 pt-8 pb-2 py-12 rounded-lg text-sm min-h-44 shadow-[0_4px_16px_0_rgba(255,165,0,0.12)] transition shadow-[0_4px_16px_0_rgba(255,165,0,0.12)] duration-300 ease-in hover:shadow-[0_4px_24px_-1px_rgba(255,165,0,0.16)]')
@@ -1847,43 +1847,39 @@ function parseTextArea(e) {
     e.preventDefault();
     const textarea = document.getElementById('import-text');
     console.log(textarea)
-    // const resultDiv = document.getElementById('result');
     const jsonString = textarea.value;
     const startIndex = jsonString.indexOf('{');
     const endIndex = jsonString.lastIndexOf('}');
+
     if (startIndex !== -1 && endIndex !== -1) {
         let jsonStr = jsonString.substring(startIndex, endIndex + 1);
         jsonStr = jsonStr.replace(/\s/g, " ")
         console.log("json str", jsonStr)
-        // ipcRenderer.send("banker:addorsig", jsonStr)
         addOrSign(jsonStr)
+    } else {
+      alertError("Invalid FSCB JSON message. Please copy the message sent to your email.")
     }
 }
 
 function addOrSign(options) {
-    // e.preventDefault()
-    // console.log(typeof(options))
+    
     const banker = JSON.parse(options)
-    // console.log(banker)
+    
     if (banker.message.includes("request-pubkey")) {
-      //bankerPubkeyRequest(banker)
+      
       /**
         Generate new keys for the account
       **/
-    //   win.webContents.send('request:banker-pubkey', banker)
-        console.log("request pubkey has been called")
-        bankerPukey(banker)
+      console.log("request pubkey has been called")
+      bankerPukey(banker)
     }else if (banker.message.includes("response-pubkey")) {
-      // console.log("response pubkey")
       bankerPubkeyResponse(banker)
     }else if (banker.message.includes("request-signature")) {
       console.log("request signature")
-      // win.webContents.send('request:banker-signature', banker)
       bankerSignatureRequest(banker)
     } else if (banker.message.includes("response-signature")) {
       console.log("response signature")
       bankerSignatureResponse(banker)
-      //win.webContents.send('response:banker-signature', banker)
     } else if (banker.message.includes("import:json-data")) {
       console.log("import backup data")
       importData(banker)
@@ -2417,35 +2413,58 @@ async function bankerSignatureRequest (message) {
   for (let i = 0; i < inputs.length; i++) {
     var s = deserializeTx.extractScriptKey(i);
     let input = inputs[i]
-    console.log("s: ", s.script)
-    console.log("N: ", input.outpoint.index)
-    console.log(input.outpoint.hash)
+    // console.log("s: ", s.script)
+    // console.log("N: ", input.outpoint.index)
+    // console.log(input.outpoint.hash)
+    // let inputs1 = document.createElement('input')
+    // inputs1.setAttribute('readonly', true)
+    // inputs1.setAttribute('class', 'md:flex px-3 bg-gray-300 text-black h-10 left-96 py-2 w-96');
+    // inputs1.value = input.outpoint.hash
+    // let row = inputsTable.insertRow();
+    // let txid = row.insertCell(0);
+    // // txid.innerHTML = input.outpoint.hash
+    // txid.appendChild(inputs1)
+    // txid.setAttribute('width', '45%')
+    // let inputs2 = document.createElement('input')
+    // inputs2.setAttribute('readonly', true)
+    // inputs2.setAttribute('class', 'text-black text-center');
+    // inputs2.value = input.outpoint.index
+    // let indexNo = row.insertCell(1);
+    // indexNo.setAttribute('class', 'text-center bg-white text-black font-semibold')
+    // indexNo.innerHTML = input.outpoint.index
+    // // indexNo.appendChild(inputs2)
+    // indexNo.setAttribute('width', '10%')
+    // let inputs3 = document.createElement('input')
+    // inputs3.setAttribute('readonly', true)
+    // inputs3.setAttribute('class', 'md:flex bg-gray-300 pl-1 h-10 text-black px-3 py-2 w-full');
+    // inputs3.value = s.script
+    // let script = row.insertCell(2);
+    // // script.innerHTML = s.script
+    // script.appendChild(inputs3)
+    // script.setAttribute('width', '45%')
+
+    let div = document.createElement('div')
+    div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
     let inputs1 = document.createElement('input')
     inputs1.setAttribute('readonly', true)
-    inputs1.setAttribute('class', 'md:flex px-3 bg-gray-300 text-black h-10 left-96 py-2 w-96');
+    inputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
     inputs1.value = input.outpoint.hash
-    let row = inputsTable.insertRow();
-    let txid = row.insertCell(0);
-    // txid.innerHTML = input.outpoint.hash
-    txid.appendChild(inputs1)
-    txid.setAttribute('width', '45%')
+    
     let inputs2 = document.createElement('input')
     inputs2.setAttribute('readonly', true)
-    inputs2.setAttribute('class', 'text-black text-center');
+    inputs2.setAttribute('class', 'col-span-1 text-center');
     inputs2.value = input.outpoint.index
-    let indexNo = row.insertCell(1);
-    indexNo.setAttribute('class', 'text-center bg-white text-black font-semibold')
-    indexNo.innerHTML = input.outpoint.index
-    // indexNo.appendChild(inputs2)
-    indexNo.setAttribute('width', '10%')
+    
     let inputs3 = document.createElement('input')
     inputs3.setAttribute('readonly', true)
-    inputs3.setAttribute('class', 'md:flex bg-gray-300 pl-1 h-10 text-black px-3 py-2 w-full');
+    inputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
     inputs3.value = s.script
-    let script = row.insertCell(2);
-    // script.innerHTML = s.script
-    script.appendChild(inputs3)
-    script.setAttribute('width', '45%')
+    
+    div.appendChild(inputs1)
+    div.appendChild(inputs2)
+    div.appendChild(inputs3)
+
+    inputsTable.appendChild(div)
   }
 
   for (let i = 0; i < outputs.length; i++) {
@@ -2460,19 +2479,29 @@ async function bankerSignatureRequest (message) {
       if(dataascii.match(/^[\s\d\w]+$/ig)){
         data = dataascii;
       }
-      console.log("address: ", data)
-      console.log("amount: ", (output.value/100000000).toFixed(8))
-      console.log("script: ", Crypto.util.bytesToHex(output.script.buffer))
-      let row = outputsTable.insertRow();
-      let address = row.insertCell(0);
-      address.innerHTML = data
-      address.setAttribute('width', '45%')
-      let amount = row.insertCell(1);
-      amount.innerHTML = (output.value/100000000).toFixed(8)
-      amount.setAttribute('width', '10%')
-      let script = row.insertCell(2);
-      script.innerHTML = Crypto.util.bytesToHex(output.script.buffer)
-      script.setAttribute('width', '45%')
+
+      let div = document.createElement('div')
+      div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
+      let outputs1 = document.createElement('input')
+      outputs1.setAttribute('readonly', true)
+      outputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
+      outputs1.value = data
+      
+      let outputs2 = document.createElement('input')
+      outputs2.setAttribute('readonly', true)
+      outputs2.setAttribute('class', 'col-span-1 text-sm text-center');
+      outputs2.value = (output.value/100000000).toFixed(8)
+      
+      let outputs3 = document.createElement('input')
+      outputs3.setAttribute('readonly', true)
+      outputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
+      outputs3.value = Crypto.util.bytesToHex(output.script.buffer)
+      
+      div.appendChild(outputs1)
+      div.appendChild(outputs2)
+      div.appendChild(outputs3)
+
+      outputsTable.appendChild(div)
     } else {
 
       var addr = '';
@@ -2484,22 +2513,31 @@ async function bankerSignatureRequest (message) {
         var pub = coin_js.pub;
         coin_js.pub = coin_js.multisig;
         addr = coin_js.scripthash2address(Crypto.util.bytesToHex(output.script.chunks[1]));
-        coinjs.pub = pub;
+        coin_js.pub = pub;
       }
 
-      console.log("address: ", addr)
-      console.log("amount: ", (output.value/100000000).toFixed(8))
-      console.log("script: ", Crypto.util.bytesToHex(output.script.buffer))
-      let row = outputsTable.insertRow();
-      let address = row.insertCell(0);
-      address.setAttribute('width', '45%')
-      address.innerHTML = addr
-      let amount = row.insertCell(1);
-      amount.innerHTML = (output.value/100000000).toFixed(8)
-      amount.setAttribute('width', '10%')
-      let script = row.insertCell(2);
-      script.innerHTML = Crypto.util.bytesToHex(output.script.buffer)
-      script.setAttribute('width', '45%')
+      let div = document.createElement('div')
+      div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
+      let outputs1 = document.createElement('input')
+      outputs1.setAttribute('readonly', true)
+      outputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
+      outputs1.value = addr
+      
+      let outputs2 = document.createElement('input')
+      outputs2.setAttribute('readonly', true)
+      outputs2.setAttribute('class', 'col-span-1 text-sm text-center');
+      outputs2.value = (output.value/100000000).toFixed(8)
+      
+      let outputs3 = document.createElement('input')
+      outputs3.setAttribute('readonly', true)
+      outputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
+      outputs3.value = Crypto.util.bytesToHex(output.script.buffer)
+      
+      div.appendChild(outputs1)
+      div.appendChild(outputs2)
+      div.appendChild(outputs3)
+
+      outputsTable.appendChild(div)
     }
   }
 
@@ -2508,8 +2546,7 @@ async function bankerSignatureRequest (message) {
 
     let pk = document.getElementById('banker-pivkey-for-signature')
     let privkey = pk.value
-    // console.log("pk: ", privkey)
-    // console.log("is valid: ", isKeyValid(privkey))
+    
     if (privkey) {
         if (isWifKeyValid(privkey)) {
         bankerSignTransaction(message, privkey)
@@ -2956,7 +2993,7 @@ async function contractnew (options) {
             }
             let row = accountBody.insertRow();
             let name = row.insertCell(0);
-            name.setAttribute('class', 'text-center')
+            name.setAttribute('class', 'text-center py-2')
             name.innerHTML = accounts[x].contract_name
             let address = row.insertCell(1);
             address.setAttribute('class', 'text-center')
@@ -2979,7 +3016,7 @@ async function contractnew (options) {
               Mobile view account list
             **/
             let bodytr1 = document.createElement('tr')
-            bodytr1.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
+            bodytr1.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-sm font-normal")
             let headtd1 = document.createElement('td')
             headtd1.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
             headtd1.innerHTML = "Name"
@@ -2988,7 +3025,7 @@ async function contractnew (options) {
             bodytd1.innerHTML = accounts[x].contract_name
 
             let bodytr2 = document.createElement('tr')
-            bodytr2.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
+            bodytr2.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-sm font-normal")
             let headtd2 = document.createElement('td')
             headtd2.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
             headtd2.innerHTML = "Address"
@@ -2998,7 +3035,7 @@ async function contractnew (options) {
 
           
             let bodytr3 = document.createElement('tr')
-            bodytr3.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
+            bodytr3.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-sm font-normal")
             let headtd3 = document.createElement('td')
             headtd3.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
             headtd3.innerHTML = "Balance"
@@ -3007,7 +3044,7 @@ async function contractnew (options) {
             bodytd3.innerHTML = accounts[x].balance
 
             let bodytr4 = document.createElement('tr')
-            bodytr4.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-base font-normal")
+            bodytr4.setAttribute("class", "sm:table-row mb-2 sm:mb-0 text-sm font-normal")
             let headtd4 = document.createElement('td')
             headtd4.setAttribute("class", "border-grey-light border p-3 bg-white text-black")
             headtd4.innerHTML = "Actions"
@@ -3072,18 +3109,21 @@ async function contractnew (options) {
 
       let anchor = document.createElement('a')
       anchor.setAttribute('class', 'red pubkeyRemove cursor-pointer')
-      //let minus = document.createElement('object')
+      
+      let minusContainer = document.createElement("div")
+      minusContainer.setAttribute("class", "flex justify-center")
       let minus = document.createElement('img')
       minus.setAttribute('src', './assets/imgs/minus.svg')
       minus.setAttribute('width', '50')
       minus.setAttribute('height', '50')
       minus.setAttribute('class', 'red pubkeyRemove')
+      minusContainer.appendChild(minus)
 
 
 
       div.appendChild(input1)
       div.appendChild(input2)
-      div.appendChild(minus)
+      div.appendChild(minusContainer)
       mainKey.appendChild(div)
 
       minus.addEventListener('click', (e) => {
