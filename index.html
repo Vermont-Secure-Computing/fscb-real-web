@@ -141,7 +141,7 @@
               <p class="text-l text-white my-1" id="sign-request-title"></p>
               <div id="owner-message-sign-request-body" class="max-h-[420px] overflow-y-auto">
               </div>
-              <div id="owner-message-sign-request-close-button"></div>
+              <div id="owner-message-sign-request-close-button" class="flex justify-end"></div>
             </div>
             <!--End of Owners view - Message to send - Signature request-->
 
@@ -153,11 +153,11 @@
               <div id="owner-withdrawal-txid-body">
                 <div class="text-white my-1">
                   <p>TxID</p>
-                  <div id="owner-withdrawal-txid-for-broadcast" class="break-all p2 bg-white p-8 text-black font-normal text-base mt-8 max-h-[360px]"></div>
+                  <div id="owner-withdrawal-txid-for-broadcast" class="break-all p2 bg-white p-8 text-black font-normal text-base mt-8"></div>
                 </div>
 
                 <!-- Successful withdrawal broadcast -->
-                <div id="owner-withdrawal-response-success-container" class="hidden bg-teal-100 border border-teal-400 text-teal-700 px-4 py-3 rounded relative" role="alert">
+                <div id="owner-withdrawal-response-success-container" class="hidden break-all bg-teal-100 border border-teal-400 text-teal-700 px-4 py-3 rounded relative" role="alert">
                   <strong class="font-bold">TxID </strong>
                   <span class="block sm:inline" id="owner-withdrawal-txid-response"></span>
                 </div>
@@ -191,8 +191,14 @@
                   </div>
                 </div>
 
-                <div class="mt-20 text-base font-bold"><p>WIF Private Key</p></div>
-                <input type="text" id="pivkey-wif" disabled class="col-span-3 bg-[#AAE8BD] border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <div class="mt-8 md:mt-20 text-base font-bold"><p>WIF Private Key</p></div>
+                
+                <!-- <div class="relative">
+                  <div class="absolute inset-y-0 pr-8 end-0 flex items-center ps-3 pointer-events-none">
+                    <img src="./assets/imgs/copy_button.png" class="px-2 cursor-pointer hover:scale-125 transition duration-500" />
+                  </div> -->
+                  <input type="text" id="pivkey-wif" disabled class="col-span-3 bg-[#AAE8BD] border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <!-- </div> -->
 
                 <div class="mt-8 text-base font-bold"><p>Public Key</p></div>
                 <input type="text" id="pubkey-compressed" disabled class="col-span-3 bg-[#AAE8BD] border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
