@@ -253,7 +253,8 @@ async function balanceApi() {
               headers: {
                 'Accept': 'application/json',
                 'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX",
-                'Access-Control-Allow-Origin': '*'
+                'Access-Control-Allow-Origin': '*',
+                'mode': 'no-cors'
               },
               
             })
@@ -1291,6 +1292,8 @@ function showBankerRequestSend(data) {
 
 
     let buttonDiv = document.getElementById('banker-message-close-button')
+    buttonDiv.innerHTML = ""
+
     const div = document.createElement('div')
     div.setAttribute('class', 'bg-white p-3 rounded-md text-black')
     const p = document.createElement('p')
@@ -2750,6 +2753,7 @@ function finalizeNewKeys(evt){
     button.textContent = "Clear"
     btnContainer.appendChild(button)
 
+    textBody.innerHTML = ""
     const p = document.createElement('p')
     const br = document.createElement('br')
     const p1 = document.createElement('p')
@@ -3781,6 +3785,27 @@ function displayExportData(message) {
     backupMessageContainer.classList.add('hidden')
     showImportListScreen()
   }, false);
+}
+
+function importData(data) {
+
+	if (data.user) {
+		const user = JSON.stringify(data.user, null, 2)
+    localStorage.setItem("user", user)
+	}
+	if (data.bankers) {
+		const bankers = JSON.stringify(data.bankers, null, 2)
+    localStorage.setItem("bankers", bankers)
+	}
+	if (data.accounts) {
+		const accounts = JSON.stringify(data.accounts, null, 2)
+    localStorage.setItem("accounts", accounts)
+	}
+
+	/****/
+	alertSuccess("Successfully imported FSCB data.")
+  const textarea = document.getElementById('import-text');
+  textarea.innerHTML = ""
 }
 
 formCreateAccount.addEventListener("submit", saveAndCreateText);
