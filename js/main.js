@@ -2254,8 +2254,9 @@ async function responseBankerSignture(data) {
       const optiondata = {
         account,
         message,
-        banker
+        "banker": JSON.parse(banker)
       }
+      console.log("optiondata: ", optiondata)
       ownerSaveNextBanker(optiondata)
     } else {
       alertError("Please select a banker.")
@@ -2268,6 +2269,7 @@ async function ownerSaveNextBanker(data) {
   let account = data.account
 	let message = data.message
 	let next_banker = data.banker
+  console.log("next_banker: ", next_banker)
 
   const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
 	if (accounts) {
@@ -2373,7 +2375,7 @@ async function ownerShowBankerSignatureMessage(message) {
 
 
   let closeButton = document.createElement('button')
-  closeButton.classList.add("inline-flex", "items-center", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "absolute", "right-5", "mt-5", "text-white", "bg-orange-500", "rounded-lg", "focus:ring-4", "focus:ring-blue-200", "dark:focus:ring-orange-500", "hover:bg-orange-500")
+  closeButton.classList.add("items-center", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "mt-5", "text-white", "bg-orange-500", "rounded-lg", "focus:ring-4", "focus:ring-blue-200", "dark:focus:ring-orange-500", "hover:bg-orange-500")
   closeButton.innerHTML = "Close"
   closeButton.addEventListener("click", function() {
     // bankerForm.classList.remove('hidden')
@@ -3269,6 +3271,9 @@ async function contractnew (options) {
     let accountSigFilter;
     let inputsTable = document.getElementById('banker-verify-inputs-initial')
     let outputsTable = document.getElementById('banker-verify-outputs-initial')
+
+    inputsTable.innerHTML = ""
+    outputsTable.innerHTML = ""
     console.log("get unspent", getunspent)
     for(let i = 0; i < getunspent.length; i++) {
       if(getunspent[i].children[5].defaultChecked) {
@@ -3556,7 +3561,7 @@ function closeSendSignatureScreen() {
 }
 
 
-  function requestSignatureWindow(tx, account) {
+  function requestSignatureWindow(tx, account, banker) {
     // Clear withdraw address and amount input
     let withdrawAddrInput = document.getElementById('withdraw-address')
     let withdrawAmtInput = document.getElementById('withdraw-amount')
@@ -3588,7 +3593,7 @@ function closeSendSignatureScreen() {
     const br = document.createElement('br')
 
     const p1 = document.createElement('p')
-    p1.innerHTML = "Please copy the line below and send it to" + " " + accountParse[0].bankers[0].banker_email
+    p1.innerHTML = "Please copy the line below and send it to" + " " + banker.banker_email
     const p2 = document.createElement('p')
     p2.innerHTML = accountParse[0].creator_name + " is requesting for your banker signature at this " + accountParse[0].contract_name
     const p3 = document.createElement('p')
@@ -3602,15 +3607,15 @@ function closeSendSignatureScreen() {
     const p7 = document.createElement('p')
     p7.innerHTML = '"id":' + '"' + accountParse[0].id + '",'
     const p8 = document.createElement('p')
-    p8.innerHTML = '"banker_id":' + accountParse[0].bankers[0].banker_id + ','
+    p8.innerHTML = '"banker_id":' + banker.banker_id + ','
     const p9 = document.createElement('p')
     p9.innerHTML = '"creator_name":' + '"' + accountParse[0].creator_name + '",'
     const p10 = document.createElement('p')
     p10.innerHTML = '"creator_email":' + '"' + accountParse[0].creator_email + '",'
     const p11 = document.createElement('p')
-    p11.innerHTML = '"banker_name":' + '"' + accountParse[0].bankers[0].banker_name + '",'
+    p11.innerHTML = '"banker_name":' + '"' + banker.banker_name + '",'
     const p12 = document.createElement('p')
-    p12.innerHTML = '"banker_email":' + '"' + accountParse[0].bankers[0].banker_email + '",'
+    p12.innerHTML = '"banker_email":' + '"' + banker.banker_email + '",'
     const p13 = document.createElement('p')
     p13.innerHTML = '"transaction_id_for_signature":' + '"' + tx + '",'
     const p14 = document.createElement('p')
@@ -3656,8 +3661,8 @@ function closeSendSignatureScreen() {
     messageSignature.appendChild(p16)
     messageSignature.appendChild(p17)
     const data = {
-      "banker_id": accountParse[0].bankers[0].banker_id,
-      "banker_name": accountParse[0].bankers[0].banker_name,
+      "banker_id": banker.banker_id,
+      "banker_name": banker.banker_name,
       "date_requested": Date.now(),
       "date_signed": null,
       "status": "PENDING",
