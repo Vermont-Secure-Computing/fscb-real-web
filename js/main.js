@@ -450,6 +450,9 @@ async function listfile(evt) {
         let mobileDetails = convertToJson[x]
         bodytd4.addEventListener("click", function() {getAccountDetails(mobileDetails);}, false);
 
+        let bodytr5 = document.createElement('tr')
+        bodytr5.setAttribute("height", "12px")
+
         bodytr1.appendChild(headtd1)
         bodytr1.appendChild(bodytd1)
         bodytr2.appendChild(headtd2)
@@ -463,6 +466,7 @@ async function listfile(evt) {
         mobileAccountTableBody.appendChild(bodytr2)
         mobileAccountTableBody.appendChild(bodytr3)
         mobileAccountTableBody.appendChild(bodytr4)
+        mobileAccountTableBody.appendChild(bodytr5)
       }
     }
 
@@ -1399,6 +1403,7 @@ async function bankersListView(evt) {
     const mobileBankersListBody = document.getElementById('mobile-bankers-list-body')
 
     bankersBody.innerHTML = ""
+    mobileBankersListBody.innerHTML = ""
     for(let x in bankersArray) {
         if(bankersArray.hasOwnProperty(x)){
             let pubkey = slicePubkey(bankersArray[x].pubkey)
@@ -3054,6 +3059,9 @@ async function contractnew (options) {
             let mobileDetails = accounts[x]
             bodytd4.addEventListener("click", function() {getAccountDetails(mobileDetails);}, false);
 
+            let bodytr5 = document.createElement('tr')
+            bodytr5.setAttribute("height", "12px")
+
             bodytr1.appendChild(headtd1)
             bodytr1.appendChild(bodytd1)
             bodytr2.appendChild(headtd2)
@@ -3062,11 +3070,14 @@ async function contractnew (options) {
             bodytr3.appendChild(bodytd3)
             bodytr4.appendChild(headtd4)
             bodytr4.appendChild(bodytd4)
+            bodytr4.appendChild(headtd4)
+            bodytr4.appendChild(bodytd4)
             
             mobileAccountTableBody.appendChild(bodytr1)
             mobileAccountTableBody.appendChild(bodytr2)
             mobileAccountTableBody.appendChild(bodytr3)
             mobileAccountTableBody.appendChild(bodytr4)
+            mobileAccountTableBody.appendChild(bodytr5)
         }
     }
 
