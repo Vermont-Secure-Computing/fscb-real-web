@@ -707,19 +707,21 @@
               <div class="mt-20">
                 <p>List of Bankers</p>
               </div>
-              <table id="bankers-list" class="hidden md:inline-table relative w-full pl-96 flex-col border-collapse border border-slate-400 text-center text-sm font-light text-black bg-white mt-4">
-                <thead class="border-b font-medium dark:border-neutral-950">
-                  <tr>
-                    <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-100"/>
-                    <th scope="col" class="px-6 py-2">Name</th>
-                    <th scope="col" class="px-6 py-2">Email</th>
-                    <th scope="col" class="px-6 py-2">Public Key</th>
-                    <th scope="col" class="px-6 py-2">Currency</th>
-                  </tr>
-                </thead>
-                <tbody class="text-black bg-white" id="bankers-list-body">
-                </tbody>
-              </table>
+              <div id="bankers-list">
+                <table class="hidden md:inline-table relative w-full pl-96 flex-col border-collapse border border-slate-400 text-center text-sm font-light text-black bg-white mt-4">
+                  <thead class="border-b font-medium dark:border-neutral-950">
+                    <tr>
+                      <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-100"/>
+                      <th scope="col" class="px-6 py-2">Name</th>
+                      <th scope="col" class="px-6 py-2">Email</th>
+                      <th scope="col" class="px-6 py-2">Public Key</th>
+                      <th scope="col" class="px-6 py-2">Currency</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-black bg-white" id="bankers-list-body">
+                  </tbody>
+                </table>
+              </div>
 
               <table id="mobile-bankers-list" class="table-auto md:hidden w-full flex-no-wrap sm:bg-white overflow-hidden sm:shadow-lg my-5">
                 <tbody id="mobile-bankers-list-body" class="flex-1 sm:flex-none"></tbody>
@@ -780,15 +782,15 @@
         </div>
       </div>
       <div id="user-profile" class="p-3 md:p-2 hidden h-screen bg-[#1a1a1a] flex justify-center items-center">
-        <form id="user-profile-form" class="text-white">
+        <form id="user-profile-form" class="text-white w-full md:w-96">
           <div class="flex justify-center">
             <img src="./assets/imgs/fscb_01.png" alt="fscb" class="mx-auto">
           </div>
            <div class="font-semibold mt-8">
             <!--span>Please do fill up the form</span-->
            </div>
-          <input input type="text" id="user-name" class="col-span-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-96 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 banker-name-add mt-2 rounded" placeholder="Username">
-          <input input type="email" id="user-email" class="col-span-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-96 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 banker-name-add mt-5 rounded" placeholder="Users E-mail">
+          <input input type="text" id="user-name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 banker-name-add mt-2 rounded" placeholder="Username">
+          <input input type="email" id="user-email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 banker-name-add mt-5 rounded" placeholder="Users E-mail">
           <button id="add-user-profile-btn" type="submit" class="items-center px-40 py-3 text-md font-medium text-center text-white bg-orange-500 focus:ring-4 focus:ring-orange-500 dark:focus:bg-orange-500 hover:bg-orange mt-5 rounded-full w-full">Submit</button>
         </form>
       </div>
