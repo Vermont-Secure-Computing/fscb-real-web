@@ -2082,7 +2082,7 @@ async function withdrawalApi(message) {
               if (withdrawal.id == withdrawalId){
                 console.log("inside withdrawal id")
                 withdrawal.date_broadcasted = Date.now()
-                withdrawal.txid = body.data.hash
+                withdrawal.txid = resp.data.hash
                 console.log(withdrawal)
                 
                 /**
