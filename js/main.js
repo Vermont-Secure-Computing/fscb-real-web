@@ -246,17 +246,9 @@ async function balanceApi() {
           }
         } else if (allaccount[i].currency === 'bitcoin') {
           try {
-            
-            const apiUrl = `https://chain.so/api/v3/balance/BTC/${allaccount[i].address}`
+            const apiUrl = `https://api.logbin.org/api/coin/balance?address=${allaccount[i].address}&currency="BTC"`
             const response = await fetch(apiUrl, {
               method: "GET",
-              headers: {
-                'Accept': 'application/json',
-                'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX",
-                'Access-Control-Allow-Origin': '*',
-                'mode': 'no-cors'
-              },
-              
             })
             .then(response => {
               if (!response.ok) {
@@ -265,14 +257,14 @@ async function balanceApi() {
               return response.json();
             })
             .then(data => {
-              console.log("fetch data: ", data);
+              console.log("fetch btc balance data: ", data);
               return data
             })
             .catch(error => {
               console.error('fetch Error:', error);
             });
-            const body = response
-            if (response) {
+            const body = response.message
+            if (response.message.status === "success") {
               console.log("btc body: ", body)
               allaccount[i].balance = body.data.confirmed
               const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null
@@ -296,14 +288,9 @@ async function balanceApi() {
           }
         } else if (allaccount[i].currency === 'litecoin') {
           try {
-            const apiUrl = `https://chain.so/api/v3/balance/LTC/${allaccount[i].address}`
+            const apiUrl = `https://api.logbin.org/api/coin/balance?address=${allaccount[i].address}&currency="LTC"`
             const response = await fetch(apiUrl, {
-              method: "GET",
-              headers: {
-                'Accept': 'application/json',
-                'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
-              },
-              
+              method: "GET"
             })
             .then(response => {
               if (!response.ok) {
@@ -318,8 +305,8 @@ async function balanceApi() {
             .catch(error => {
               console.error('fetch Error:', error);
             });
-            const body = response
-            if (response.data) {
+            const body = response.message
+            if (response.message.status === "success") {
               allaccount[i].balance = body.data.confirmed
               const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null
               if (accounts) {
@@ -1020,13 +1007,14 @@ async function unspentApi(address) {
     } else if (address.currency === 'bitcoin') {
       try {
         
-        const apiUrl = `https://chain.so/api/v3/unspent_outputs/BTC/${address.address}/1`
+        //const apiUrl = `https://chain.so/api/v3/unspent_outputs/BTC/${address.address}/1`
+        const apiUrl = `https://api.logbin.org/api/coin/utxo?address=${address.address}&currency="BTC"`
         const response = await fetch(apiUrl, {
           method: "GET",
-          headers: {
-            'Accept': 'application/json',
-            'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
-          },
+          // headers: {
+          //   'Accept': 'application/json',
+          //   'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
+          // },
           
         })
         .then(response => {
@@ -1045,9 +1033,9 @@ async function unspentApi(address) {
         
 
         console.log(response)
-        if (response.status === 200) {
+        if (response.message.status === "success") {
           const data = {
-            "utxo": response.data.outputs,
+            "utxo": response.message.data.outputs,
             "currency": address.currency
           }
           return data
@@ -1058,13 +1046,14 @@ async function unspentApi(address) {
     } else if (address.currency === 'litecoin') {
       try {
         
-        const apiUrl = `https://chain.so/api/v3/unspent_outputs/LTC/${address.address}/1`
+        //const apiUrl = `https://chain.so/api/v3/unspent_outputs/LTC/${address.address}/1`
+        const apiUrl = `https://api.logbin.org/api/coin/utxo?address=${address.address}&currency="BTC"`
         const response = await fetch(apiUrl, {
           method: "GET",
-          headers: {
-            'Accept': 'application/json',
-            'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
-          },
+          // headers: {
+          //   'Accept': 'application/json',
+          //   'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
+          // },
           
         })
         .then(response => {
@@ -1082,9 +1071,9 @@ async function unspentApi(address) {
         });
 
         console.log(response)
-        if (response.status === 200) {
+        if (response.message.status === "success") {
           const data = {
-            "utxo": response.data.outputs,
+            "utxo": response.message.data.outputs,
             "currency": address.currency
           }
           return data
@@ -1869,6 +1858,11 @@ function parseTextArea(e) {
     }
 }
 
+
+/**
+ * 
+ * Import text functions
+ */
 function addOrSign(options) {
     
     const banker = JSON.parse(options)
@@ -2039,27 +2033,9 @@ async function withdrawalApi(message) {
 	} else if (message.currency === "bitcoin" || message.currency === "litecoin") {
 		let chain = message.currency === "bitcoin" ? "BTC" : "LTC";
 		try {
-
-      // const response = await axios(`https://chain.so/api/v3/broadcast_transaction/${chain}`, {
-      //   method: 'post',
-      //   headers: {
-      //       'Accept': 'application/json',
-      //       'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
-      //   },
-      //   data: {
-      //     'tx_hex' : txid
-      //   }
-      // });
-      const apiUrl = `https://chain.so/api/v3/broadcast_transaction/${chain}`
+      const apiUrl = `https://api.logbin.org/api/coin/broadcast?txid=${txid}&currency=${chain}`
       const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          'Accept': 'application/json',
-          'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
-        },
-        data: {
-          'tx_hex' : txid
-        }
+        method: "GET"
       })
       .then(response => {
         if (!response.ok) {
@@ -2074,7 +2050,7 @@ async function withdrawalApi(message) {
       .catch(error => {
         console.error('fetch Error:', error);
       });
-      const resp = response
+      const resp = response.message
       let body
 
       if (resp.data) {
