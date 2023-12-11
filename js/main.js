@@ -57,8 +57,14 @@ let browseBtn = document.getElementById("export-browse-btn")
 let inputFileBrowser = document.getElementById("select-dir")
 
 
-// console.log(getListClick)
-// const accountList = document.getElementById('accounts-list');
+/**
+ * Add banker screen
+ */
+let bankerForm = document.getElementById('add-banker-form')
+let bankersList = document.getElementById('bankers-list')
+let bankerMessage = document.getElementById('banker-message-container')
+let bankerListContainer = document.getElementById('bankers-list-container')
+
 
 const sigNumber = document.getElementById('releaseCoins');
 const currency = document.getElementById('account-coin-currency')
@@ -112,6 +118,15 @@ tabTogglers.forEach(function(toggler) {
     toggler.addEventListener("click", function(e) {
         e.preventDefault();
         importTextTab.classList.add('hidden')
+        // Clear import textarea
+        importText.value = ""
+
+        //Close add banker message
+        closeBankerMessage()
+
+        //Close withdrawal request for sig screen
+        closeSendSignatureOnLeave()
+
         let tabName = this.getAttribute("href");
         openTab = tabName;
         if (tabName === "#first") {
@@ -156,7 +171,7 @@ tabTogglers.forEach(function(toggler) {
           tabContents.children[tab].classList.add("hidden");
 
         }
-        for (let i = 0; i < tabTogglers.length-1; i++) {
+        for (let i = 0; i < tabTogglers.length; i++) {
           tabTogglers[i].parentElement.classList.remove("bg-gradient-to-l", "from-gray-500");
         }
         e.target.parentElement.classList.add("bg-gradient-to-l", "from-gray-500");
@@ -1269,10 +1284,10 @@ async function writeBankerData(data, idNumber, nameInput, emailInput) {
 }
 
 function showBankerRequestSend(data) {
-    let bankerForm = document.getElementById('add-banker-form')
-    let bankersList = document.getElementById('bankers-list')
-    let bankerMessage = document.getElementById('banker-message-container')
-    let bankerListContainer = document.getElementById('bankers-list-container')
+    // let bankerForm = document.getElementById('add-banker-form')
+    // let bankersList = document.getElementById('bankers-list')
+    // let bankerMessage = document.getElementById('banker-message-container')
+    // let bankerListContainer = document.getElementById('bankers-list-container')
 
     bankerListContainer.classList.add('hidden')
     bankerForm.classList.add('hidden')
@@ -1347,16 +1362,21 @@ function showBankerRequestSend(data) {
 
       addBankerButton("enable")
       refreshBankersList()
-      bankerListContainer.classList.remove('hidden')
-      bankerForm.classList.remove('hidden')
-      bankersList.classList.remove('hidden')
-      bankerMessage.classList.add('hidden')
+      closeBankerMessage()
     }, false);
 
     console.log("div button: ", buttonDiv)
     buttonDiv.appendChild(closeButton)
     bankerMessage.appendChild(buttonDiv)
 }
+
+function closeBankerMessage() {
+  bankerListContainer.classList.remove('hidden')
+  bankerForm.classList.remove('hidden')
+  bankersList.classList.remove('hidden')
+  bankerMessage.classList.add('hidden')
+}
+
 
 /**
   Read user's data from the localStorage
@@ -3527,6 +3547,19 @@ async function contractnew (options) {
     console.log("account filter: ", accountFilter)
     return accountFilter
   };
+
+
+
+function closeSendSignatureOnLeave() {
+  let sendSignature = document.getElementById('send-signature')
+  let signatureMessage = document.getElementById('request-sig-message')
+  let accountListScreen = document.getElementById('accounts-list')
+
+  accountListScreen.classList.remove('hidden')
+  sendSignature.classList.add('hidden')
+  signatureMessage.innerHTML = ""
+
+}
 
 function closeSendSignatureScreen() {
   let sendSignature = document.getElementById('send-signature')
