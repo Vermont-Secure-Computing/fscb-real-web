@@ -194,7 +194,6 @@ refreshBtn.addEventListener("click", () => {
 function setAccountCurrency() {
   const coinCurrencySend = currency.options[currency.selectedIndex].text;
   ACCOUNT_CURRENCY = coinCurrencySend
-  console.log("account currency: ", ACCOUNT_CURRENCY)
   readBankersFile()
   accountBankerData()
 }
@@ -227,7 +226,6 @@ async function balanceApi() {
                 return response.json();
               })
               .then(data => {
-                console.log("fetch data: ", data);
                 return data
               })
               .catch(error => {
@@ -236,7 +234,6 @@ async function balanceApi() {
               
               const body = response;
               if (body.address) {
-                console.log("log body: ", body)
                 if (allaccount[i].address === body.address) {
 
                   allaccount[i].balance = body.balance
@@ -272,7 +269,6 @@ async function balanceApi() {
               return response.json();
             })
             .then(data => {
-              console.log("fetch btc balance data: ", data);
               return data
             })
             .catch(error => {
@@ -280,19 +276,15 @@ async function balanceApi() {
             });
             const body = response.message
             if (response.message.status === "success") {
-              console.log("btc body: ", body)
               allaccount[i].balance = body.data.confirmed
               const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null
               if (accounts) {
                 const jdata = accounts
-                console.log("jdata: ", jdata)
                 jdata[i] = allaccount[i]
-                console.log("jdata after: ", jdata)
                 localStorage.setItem("accounts", JSON.stringify(jdata))
 
                 const readmore = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null
                 if (readmore) {
-                  console.log("readmore: ", readmore)
                   listfile(readmore)
                 }
                 
@@ -314,7 +306,6 @@ async function balanceApi() {
               return response.json();
             })
             .then(data => {
-              console.log("fetch data: ", data);
               return data
             })
             .catch(error => {
@@ -407,7 +398,6 @@ async function listfile(evt) {
         viewAccountDetailsButton.setAttribute('class', "px-5 py-0.5 font-small text-white bg-orange-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-orange-500 hover:bg-orange-500 rounded-full")
         viewAccountDetailsButton.innerHTML = "view"
         veiwall.appendChild(viewAccountDetailsButton)
-        //viewAccountDetailsButton.addEventListener('click', getAccountDetails)
         let details = convertToJson[x]
         viewAccountDetailsButton.addEventListener("click", function() {getAccountDetails(details);}, false);
     
@@ -477,7 +467,6 @@ async function listfile(evt) {
 
 /* account detail view */
 function getAccountDetails(account){
-    console.log("get account details: ", account)
     ACCOUNT_CURRENCY = account.currency
     if (account.hasOwnProperty('id')) {
       let accountList = document.getElementById('accounts-list')
@@ -640,19 +629,16 @@ function showTxId(txid) {
  */
 
 function accountTxidDisplay(domElement, txid, w_id, banker_id, screen) {
-  //console.log("domElement: ", domElement)
+  
   if (txid) {
     let id = screen === "web" ? 'view-txid-btn-' + String(w_id) + String(banker_id) : 'mobile-view-txid-btn-' + String(w_id) + String(banker_id)
     console.log("id: ", id)
     let viewBtn = "<button class='ml-4 disabled:opacity-75 bg-blue-500 active:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' id='"+id+"'>View</button>"
-    //console.log("viewBtn: ", viewBtn)
     domElement.innerHTML = viewBtn
-    //console.log("domElement: ", domElement)
+    
     let viewTxidBtn = document.getElementById(id)
-    console.log("viewTxidBtn: ", viewTxidBtn)
     if(viewTxidBtn) {
       viewTxidBtn.addEventListener('click', () => {
-        console.log("view ", txid)
         showTxId(txid)
       })
     }
@@ -678,10 +664,7 @@ function listAccountActions(actions, signatureNeeded){
     Check if the withdrawal is ready for broadcasting
   **/
   for (const [index, withdrawal] of actions.entries()){
-    // console.log('withdrawal: ', withdrawal)
-    // console.log("has prop: ", withdrawal.hasOwnProperty('txid'))
     for(let x in withdrawal.signatures) {
-      console.log("x: ", x)
       if(withdrawal.signatures.hasOwnProperty(x)){
         let row = tableBody.insertRow();
         let id = row.insertCell(0);
@@ -694,7 +677,6 @@ function listAccountActions(actions, signatureNeeded){
           dateReq = new Date(withdrawal.signatures[x].date_requested);
         }
 
-        //dateFormat = dateReq.toDateString() + ", "+ dateReq.getHours() + ":" + dateReq.getMinutes();
         dateFormat = dateReq.toDateString()
         date.innerHTML = dateFormat
         let banker = row.insertCell(2);
@@ -703,18 +685,6 @@ function listAccountActions(actions, signatureNeeded){
         action.innerHTML = withdrawal.signatures[x].action
         let txid = row.insertCell(4);
         accountTxidDisplay(txid, withdrawal.signatures[x].transaction_id, withdrawal.id, withdrawal.signatures[x].banker_id, "web")
-        // if (withdrawal.signatures[x].transaction_id) {
-        //   let id = 'view-txid-btn-' + String(withdrawal.id) + String(withdrawal.signatures[x].banker_id)
-        //   let viewBtn = "<button class='ml-4 disabled:opacity-75 bg-blue-500 active:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' id='"+id+"'>View</button>"
-        //   txid.innerHTML = viewBtn
-        //   let viewTxidBtn = document.getElementById(id)
-        //   viewTxidBtn.addEventListener('click', () => {
-        //     console.log("view ", withdrawal.signatures[x].transaction_id)
-        //     showTxId(withdrawal.signatures[x].transaction_id)
-        //   })
-        // } else {
-        //   txid.innerHTML = ""
-        // }
         let status = row.insertCell(5);
         status.innerHTML = withdrawal.signatures[x].status
 
@@ -766,8 +736,6 @@ function listAccountActions(actions, signatureNeeded){
         headtd5.innerHTML = "Txid"
         let bodytd5 = document.createElement('td')
         bodytd5.setAttribute("class", "border-grey-light border p-3")
-        //accountTxidDisplay(bodytd5, withdrawal.signatures[x].transaction_id, withdrawal.id, withdrawal.signatures[x].banker_id, "mobile")
-        //bodytd5.innerHTML = bankersArray[x].currency
 
         let bodytr6 = document.createElement('tr')
         bodytr6.setAttribute("class", "sm:table-row sm:mb-0 text-base font-normal")
@@ -834,7 +802,6 @@ let actionsBackBtn = document.getElementById('account-actions-back-btn')
 actionsBackBtn.addEventListener('click', listAccountActionsBack)
 
 function listAccountActionsBack(){
-  console.log("actions back btn: ")
   let accountDetails = document.getElementById('account-details')
   let accountWithdrawal = document.getElementById('account-withdrawal')
   let accountActions = document.getElementById('account-actions')
@@ -852,7 +819,6 @@ function listAccountActionsBack(){
   Owner view - Account withdrawal
 **/
 async function accountWithdrawalFunc(address){
-    console.log("withdrawal: ", address)
     CHANGE_ADDRESS = address.address
     let coin_js
     if (address.currency === "woodcoin") {
@@ -865,11 +831,9 @@ async function accountWithdrawalFunc(address){
       console.log("invalid currency")
     }
     const responseUnspent = await unspentApi(address)
-    console.log("responseUnspent: ", responseUnspent)
     const listP = responseUnspent.utxo
     const script = coin_js.script()
     const addressScript = script.decodeRedeemScript(address.redeemscript)
-    console.log("redeem script res ", addressScript)
 
     let accountDetails = document.getElementById('account-details')
     let accountWithdrawal = document.getElementById('account-withdrawal')
@@ -882,7 +846,7 @@ async function accountWithdrawalFunc(address){
     userInputAmountTotal = 0
     TOTAL_AMOUNT_TO_WITHDRAW = 0
 
-    let tx = coinjs.transaction();
+    let tx = coin_js.transaction();
     accountDetails.classList.add("hidden")
     accountWithdrawal.classList.remove("hidden")
     accountActions.classList.add("hidden")
@@ -904,18 +868,6 @@ async function accountWithdrawalFunc(address){
                 listPvout = listP[i].index
               }
               unspentAmountTotal += Number(listPAmount)
-                // let row = tableBody.insertRow()
-                // let transactionId = row.insertCell(0)
-                // transactionId.innerHTML = listP[i].txid.substring(0,30)+"..."
-                // let vout = row.insertCell(1)
-                // vout.innerHTML = listP[i].vout
-                // let script = row.insertCell(2)
-                // script.innerHTML = addressScript.redeemscript.substring(0,20)+"..."
-                // let amount = row.insertCell(3)
-                // amount.innerHTML = listP[i].amount
-                // tx.addinput(listP[i].txid, listP[i].vout, addressScript.redeemscript, null)
-                // tx.addoutput("WdBb5rTtXjDYGHBZvXHbhxyUar1n7RA1VJ", 1.99)
-                // console.log("tx log test: ", tx.serialize())
                 let div = document.createElement('div')
                 div.setAttribute('id', 'inner-unspent')
                 div.setAttribute('class', 'grid grid-cols-4 gap-3')
@@ -944,19 +896,15 @@ async function accountWithdrawalFunc(address){
                 check.setAttribute('type', 'checkbox')
                 check.setAttribute('checked', '')
                 check.addEventListener('change', (e, evt) => {
-                  console.log("e testing ", e)
-                  console.log("evt testing ", evt)
                   let withdrawAmt = getTotalWithdrawalAmt()
 
                   if(e.target.defaultChecked) {
                     check.removeAttribute('checked', '')
-                    console.log("subtract this amount: ", input4.value)
 
                     unspentAmountTotal -= parseFloat(input4.value)
                     withdrawalFee.value = (unspentAmountTotal - withdrawAmt).toFixed(8)
                   } else {
                     check.setAttribute('checked', '')
-                    console.log("add this amount: ", input4.value)
                     unspentAmountTotal += parseFloat(input4.value)
                     withdrawalFee.value = (unspentAmountTotal - withdrawAmt).toFixed(8)
                   }
@@ -972,7 +920,6 @@ async function accountWithdrawalFunc(address){
         }
 
     }
-    console.log("total unspent: ", unspentAmountTotal)
     withdrawalFee.value = (unspentAmountTotal).toFixed(8)
 
   }
@@ -989,7 +936,6 @@ async function accountWithdrawalFunc(address){
   }
 
 async function unspentApi(address) {
-    console.log("ipc main address: ", address)
     if (address.currency === 'woodcoin') {
       try {
           
@@ -1002,7 +948,6 @@ async function unspentApi(address) {
           return response.json();
         })
         .then(data => {
-          console.log("fetch log data: ", data);
           return data
         })
         .catch(error => {
@@ -1022,15 +967,9 @@ async function unspentApi(address) {
     } else if (address.currency === 'bitcoin') {
       try {
         
-        //const apiUrl = `https://chain.so/api/v3/unspent_outputs/BTC/${address.address}/1`
         const apiUrl = `https://api.logbin.org/api/coin/utxo?address=${address.address}&currency="BTC"`
         const response = await fetch(apiUrl, {
           method: "GET",
-          // headers: {
-          //   'Accept': 'application/json',
-          //   'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
-          // },
-          
         })
         .then(response => {
           if (!response.ok) {
@@ -1039,7 +978,6 @@ async function unspentApi(address) {
           return response.json();
         })
         .then(data => {
-          console.log("fetch data: ", data);
           return data
         })
         .catch(error => {
@@ -1047,7 +985,6 @@ async function unspentApi(address) {
         });
         
 
-        console.log(response)
         if (response.message.status === "success") {
           const data = {
             "utxo": response.message.data.outputs,
@@ -1060,16 +997,9 @@ async function unspentApi(address) {
       }
     } else if (address.currency === 'litecoin') {
       try {
-        
-        //const apiUrl = `https://chain.so/api/v3/unspent_outputs/LTC/${address.address}/1`
         const apiUrl = `https://api.logbin.org/api/coin/utxo?address=${address.address}&currency="BTC"`
         const response = await fetch(apiUrl, {
           method: "GET",
-          // headers: {
-          //   'Accept': 'application/json',
-          //   'API-KEY': "tz_jU4YJ_Gi6Y9JsErxT3bVJhB6iX0lX"
-          // },
-          
         })
         .then(response => {
           if (!response.ok) {
@@ -1078,14 +1008,12 @@ async function unspentApi(address) {
           return response.json();
         })
         .then(data => {
-          console.log("fetch data: ", data);
           return data
         })
         .catch(error => {
           console.error('fetch Error:', error);
         });
 
-        console.log(response)
         if (response.message.status === "success") {
           const data = {
             "utxo": response.message.data.outputs,
@@ -1183,7 +1111,7 @@ function addBankerButton(status) {
 /* add banker function */
 async function addBanker(e) {
     e.preventDefault()
-    // const mainBankerDiv = document.getElementById('addbanker')
+  
     const nameInput = document.getElementById('banker-name-add')
     const emailInput = document.getElementById('banker-email-add')
     addBankerButton("disable")
@@ -1194,14 +1122,11 @@ async function addBanker(e) {
 
     const bankerName = nameInput.value
     const bankerEmail = emailInput.value
-    console.log("banker name: ", bankerName)
-    console.log("banker email: ", bankerEmail)
-    console.log("banker currency: ", bankerCurrency)
+    
     /**
       Add banker form validation
     **/
     if (bankerName == "" || bankerEmail == "") {
-      console.log("User name and email is required.")
       alertError("User name and email is required.")
       addBankerButton("enable")
       return
@@ -1209,7 +1134,6 @@ async function addBanker(e) {
     if (bankerEmail) {
       let validEmail = isEmailValid(bankerEmail)
       if (!validEmail) {
-        // console.log("Please enter a valid email")
         alertError("Please enter a valid email")
         addBankerButton("enable")
         return
@@ -1232,7 +1156,6 @@ async function addBanker(e) {
 
     if (bankerEmail && bankerName) {
         const getBankerIdNumber = await bankerIdNumber()
-        console.log("get banker id number ", getBankerIdNumber)
         let data = {
             "id": Math.floor(1000000000 + Math.random() * 9000000000),
             "banker_id": getBankerIdNumber,
@@ -1250,10 +1173,8 @@ async function writeBankerData(data, idNumber, nameInput, emailInput) {
     const addBankerSubmit = document.getElementById('banker-submit-button')
     try {
       if (bankersData) {
-        console.log("if write banker has been called")
         const contentnew = bankersData
         contentnew["banker" + idNumber] = data
-        console.log("contents ", contentnew)
         
         // Update the bankers data in the localStorage
         localStorage.setItem('bankers', JSON.stringify(contentnew));
@@ -1270,7 +1191,6 @@ async function writeBankerData(data, idNumber, nameInput, emailInput) {
         // Update the bankers data in the localStorage
         localStorage.setItem('bankers', JSON.stringify(addBanker));
 
-        console.log("add banker else has been called")
         addBankerSubmit.disabled = false
         addBankerSubmit.classList.add('opacity-20')
         nameInput.value = '';
@@ -1284,11 +1204,6 @@ async function writeBankerData(data, idNumber, nameInput, emailInput) {
 }
 
 function showBankerRequestSend(data) {
-    // let bankerForm = document.getElementById('add-banker-form')
-    // let bankersList = document.getElementById('bankers-list')
-    // let bankerMessage = document.getElementById('banker-message-container')
-    // let bankerListContainer = document.getElementById('bankers-list-container')
-
     bankerListContainer.classList.add('hidden')
     bankerForm.classList.add('hidden')
     bankersList.classList.add('hidden')
@@ -1309,7 +1224,6 @@ function showBankerRequestSend(data) {
     p4.setAttribute("class", "whitespace-pre-wrap")
     const p5 = document.createElement('p')
 
-    console.log('new banker message: ', data)
     let userName = USER.user_name
     let message = {
       "header": "free_state_central_bank",
@@ -1365,7 +1279,6 @@ function showBankerRequestSend(data) {
       closeBankerMessage()
     }, false);
 
-    console.log("div button: ", buttonDiv)
     buttonDiv.appendChild(closeButton)
     bankerMessage.appendChild(buttonDiv)
 }
@@ -1383,7 +1296,6 @@ function closeBankerMessage() {
 **/
 async function getUserData() {
   const userData = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
-  console.log(userData);
   return userData
 }
 
@@ -1391,7 +1303,6 @@ async function getUserData() {
 async function getBankers() {
   try {
     const contents = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
-    console.log("contents banker ", contents)
     return contents
   }catch(e) {
     console.log("Error trying to read bankers.json")
@@ -1399,9 +1310,7 @@ async function getBankers() {
 }
 
 async function refreshBankersList() {
-  console.log("contents banker ", localStorage.getItem('bankers'))
   const contents = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
-  console.log("contents banker ", contents)
   bankersListView(contents)
 }
 
@@ -1536,7 +1445,6 @@ async function accountBankerData() {
     // Get the selected value for contract currency
     // And filter bankers array with the value
     select.options.length = 0
-    console.log("account currency: ", ACCOUNT_CURRENCY)
     for(const key in bankersArray) {
       if(bankersArray[key].pubkey && bankersArray[key].currency === ACCOUNT_CURRENCY){
         const opt = bankersArray[key].banker_email;
@@ -1553,22 +1461,19 @@ async function accountBankerData() {
     const newSelect = document.createElement('div');
     newSelect.setAttribute('class', 'selectMultiple bg-white w-full relative')
     const active = document.createElement('div');
-    // active.classList.add('active');
-    // active.setAttribute('class', 'relative z-2 pt-8 pb-2 py-12 rounded-lg text-sm min-h-44 shadow-[0_4px_16px_0_rgba(255,165,0,0.12)] transition shadow-[0_4px_16px_0_rgba(255,165,0,0.12)] duration-300 ease-in hover:shadow-[0_4px_24px_-1px_rgba(255,165,0,0.16)]')
+    
     active.setAttribute('class', 'activeClass')
     const optionList = document.createElement('ul');
     optionList.setAttribute('class', 'optionListClass')
-    // optionList.setAttribute('class', 'm-0 p-0 list-none text-base z-1 absolute top-full left-0 right-0 invisible opacity-0 rounded-lg translate-x-0 translate-y-20 origin-top-right shadow-[0_12px_20px_rgba(255,165,0,0.8)] transition-all duration-400 ease-in-out ')
+    
     const placeholder = select.dataset.placeholder;
 
     const span = document.createElement('span');
     span.setAttribute('class', 'spanClass')
-    // span.setAttribute('class', 'text-blue-200 block absolute left-12 cursor-pointer top-8 leading-7 transition-all duration-300 ease-in')
     span.innerText = placeholder;
     active.appendChild(span);
 
     selectOptions.forEach((option) => {
-        // console.log(option)
         let text = option.innerText;
         if(option.selected){
             let tag = document.createElement('a');
@@ -1580,7 +1485,6 @@ async function accountBankerData() {
         }else{
             let item = document.createElement('li');
             item.setAttribute('class', 'itemClass')
-            // item.setAttribute('class', 'text-indigo-950 bg-white px-12 py-16 cursor-pointer overflow-hidden relative litransition [&>*:first-child]:rounded-br-lg [&>*:first-child]:rounded-bl-none [&>*:last-child]:rounded-bl-lg [&>*:last-child]:rounded-br-none')
             item.dataset.value = option.value;
             item.innerHTML = text;
             optionList.appendChild(item);
@@ -1588,7 +1492,6 @@ async function accountBankerData() {
     });
     const arrow = document.createElement('div');
     arrow.classList.add('arrow');
-    // arrow.setAttribute('class', 'arrowClass')
     active.appendChild(arrow);
 
     newSelect.appendChild(active);
@@ -1617,7 +1520,7 @@ async function accountBankerData() {
             a.dataset.value = li.dataset.value;
             a.innerHTML = "<em class='emClass'>"+li.innerText+"</em><i class='iClass'></i>";
             a.classList.add('notShown');
-            // a.style.display = "none";
+            
             select.querySelector('div').appendChild(a); //might have to check later
             let selectEl = select.querySelector('select');
             let opt = selectEl.querySelector('option[value="'+li.dataset.value+'"]');
@@ -1625,9 +1528,6 @@ async function accountBankerData() {
             setTimeout(() => {
                 a.classList.add('shown');
                 select.querySelector('span').classList.add('hide');
-                // if(select.querySelector('option').innerText == li.innerText){
-                // 	select.querySelector('option').selected
-                // }
 
             }, 300);
             //1st
@@ -1657,15 +1557,6 @@ async function accountBankerData() {
                         li.remove();
                         select.classList.remove('clicked');
                     }
-    //             setTimeout(() => {
-    //                 if(li.previousElementSibling){
-    //                     li.previousElementSibling.classList.remove('beforeRemove');
-    //                 }
-    //                 if(li.nextElementSibling){
-    //                     li.nextElementSibling.classList.remove('afterRemove');
-    //                 }
-
-    //             }, 200);
             }, 300); //600
                 //2nd
         } else {
@@ -1810,14 +1701,11 @@ async function readdir(locFile) {
         path: 'fscb',
         directory: Directory.Documents
         });
-        console.log("return files", ret.files)
         if (verifyIfExists(locFile, ret.files)) {
-            console.log("true will return")
             return true
         }
         else {
             // Do something else
-            console.log("false will return")
             return false
         }
     }
@@ -1833,7 +1721,6 @@ async function idNumber() {
     try {
       if (dataJson) {
         const jconvert = dataJson
-        console.log("contract length: ", jconvert[Object.keys(jconvert)[Object.keys(jconvert).length - 1]].contract_id + 1)
         return jconvert[Object.keys(jconvert)[Object.keys(jconvert).length - 1]].contract_id + 1
           
       } else {
@@ -1850,7 +1737,6 @@ async function bankerIdNumber() {
     try {
         if (bankersData) {
           const jconvert = bankersData
-          console.log("banker length: ", jconvert[Object.keys(jconvert)[Object.keys(jconvert).length - 1]].banker_id + 1)
           return jconvert[Object.keys(jconvert)[Object.keys(jconvert).length - 1]].banker_id + 1
         } else {
             return 1
@@ -1863,7 +1749,6 @@ async function bankerIdNumber() {
 function parseTextArea(e) {
     e.preventDefault();
     const textarea = document.getElementById('import-text');
-    console.log(textarea)
     const jsonString = textarea.value;
     const startIndex = jsonString.indexOf('{');
     const endIndex = jsonString.lastIndexOf('}');
@@ -1871,7 +1756,6 @@ function parseTextArea(e) {
     if (startIndex !== -1 && endIndex !== -1) {
         let jsonStr = jsonString.substring(startIndex, endIndex + 1);
         jsonStr = jsonStr.replace(/\s/g, " ")
-        console.log("json str", jsonStr)
         addOrSign(jsonStr)
     } else {
       alertError("Invalid FSCB JSON message. Please copy the message sent to your email.")
@@ -1892,18 +1776,14 @@ function addOrSign(options) {
       /**
         Generate new keys for the account
       **/
-      console.log("request pubkey has been called")
       bankerPukey(banker)
     }else if (banker.message.includes("response-pubkey")) {
       bankerPubkeyResponse(banker)
     }else if (banker.message.includes("request-signature")) {
-      console.log("request signature")
       bankerSignatureRequest(banker)
     } else if (banker.message.includes("response-signature")) {
-      console.log("response signature")
       bankerSignatureResponse(banker)
     } else if (banker.message.includes("import:json-data")) {
-      console.log("import backup data")
       importData(banker)
     } else {
       console.log("signature")
@@ -1912,27 +1792,22 @@ function addOrSign(options) {
 
 /* response banker signature */
 async function bankerSignatureResponse(message) {
-  console.log("message banker signature ", message)
   const bankerCheckResult = await readdir('data.json');
   const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
   if (accounts) {
-    console.log(accounts)
     let accountID = message.id
     let bankerID = message.banker_id
     let next_banker
 
 		for (const [key, value] of Object.entries(accounts)) {
-      console.log("account value ", value)
       let account = value
       if (account.id == accountID) {
-        console.log("account value ", account)
-        console.log("account withdrawals ", typeof(account.withdrawals))
 				for (const [index, withdrawal] of account.withdrawals.entries()){
 					if (withdrawal.id == message.withdrawal_id){
 			    	for (const [index, signature] of withdrawal.signatures.entries()) {
-              console.log("signature ", signature)
+              
 				      if(signature.banker_id == bankerID) {
-                console.log("inside signature")
+                
 				        signature.transaction_id = message.transaction_id
 				        signature.status = "SIGNED"
 				        const date_signed = new Date()
@@ -1940,17 +1815,13 @@ async function bankerSignatureResponse(message) {
 
                 localStorage.setItem("accounts", JSON.stringify(accounts))
                 const writeAccount = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null
-                console.log("write account ", writeAccount)
+                
                 if (writeAccount) {
-                  console.log("accounts updated")
                   // check number of signatures needed
                   const signatures = withdrawal.signatures.filter(val => val.transaction_id != "");
-                  console.log("signatures: ", signatures);
                   if (signatures.length == account.signature_nedded) {
-                    console.log("ready to broadcast")
                     withdrawReadyToBroadcast(message)
                   } else {
-                    console.log("request signature to next banker")
                     let data = {
                       "account": account,
                       "message": message
@@ -1977,14 +1848,11 @@ async function withdrawReadyToBroadcast(message) {
 
   let broadcastButton = document.getElementById("owner-withdrawal-broadcast-button")
   broadcastButton.addEventListener('click', () => {
-    // ipcRenderer.send('withdrawal:api', message)
     withdrawalApi(message)
   })
 
   let closeButton = document.getElementById("owner-withdrawal-close-button")
   closeButton.addEventListener('click', () => {
-    console.log("close button")
-
     importArea.classList.remove('hidden')
     ownerWithdrawalBroadcast.classList.add('hidden')
     importText.value = ""
@@ -2018,7 +1886,6 @@ async function withdrawalApi(message) {
         return response.json();
       })
       .then(data => {
-        console.log("fetch data: ", data);
         return data
       })
       .catch(error => {
@@ -2047,7 +1914,6 @@ async function withdrawalApi(message) {
         }
       }
 	  } catch(e) {
-      console.log(e)
 	    withdrawalBroadcastResponse(e.response)
 	  }
 	} else if (message.currency === "bitcoin" || message.currency === "litecoin") {
@@ -2064,7 +1930,6 @@ async function withdrawalApi(message) {
         return response.json();
       })
       .then(data => {
-        console.log("fetch data: ", data);
         return data
       })
       .catch(error => {
@@ -2089,27 +1954,21 @@ async function withdrawalApi(message) {
         }
       }
       if (body.message) {
-        console.log("body.message: ", body.message)
         
         const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
         for (const [key, value] of Object.entries(accounts)) {
           let account = value
-          console.log("account.id vs accountId: ", account.id, accountId)
           if (account.id == accountId) {
-            console.log("inside account: ")
             for (const [index, withdrawal] of account.withdrawals.entries()){
-              console.log("withdrawal.id vs withdrawalId: ", withdrawal.id, withdrawalId)
               if (withdrawal.id == withdrawalId){
-                console.log("inside withdrawal id")
+                
                 withdrawal.date_broadcasted = Date.now()
                 withdrawal.txid = resp.data.hash
-                console.log(withdrawal)
                 
                 /**
                  * Update the account record with the withdrawal txid
                  */
                 localStorage.setItem("accounts", JSON.stringify(accounts))
-                console.log("withdrawal broadcasted. record updated")
                 
               }
             }
@@ -2118,7 +1977,6 @@ async function withdrawalApi(message) {
         withdrawalBroadcastResponse(body)
       }
 	  } catch(e) {
-	    console.log("error : ", e)
       withdrawalBroadcastResponse(e.response)
 	  }
 	} else {
@@ -2129,7 +1987,6 @@ async function withdrawalApi(message) {
 
 /* broadcast response */
 function withdrawalBroadcastResponse(res) {
-  console.log("withdrawal:broadcast-response: ", res)
   let withdrawalSuccessResponseContainer = document.getElementById('owner-withdrawal-response-success-container')
   let withdrawalErrorResponseContainer = document.getElementById('owner-withdrawal-response-error-container')
 
@@ -2139,12 +1996,10 @@ function withdrawalBroadcastResponse(res) {
   let broadcastButton = document.getElementById("owner-withdrawal-broadcast-button")
   let closeButton = document.getElementById("owner-withdrawal-close-button")
   closeButton.addEventListener('click', () => {
-    console.log("close button")
     showImportListScreen()
   })
 
   if(res.message){
-    console.log("res message: ", res.message.result)
     withdrawalSuccessResponseContainer.classList.remove('hidden')
     withdrawalTxIdResponse.innerHTML = res.message.result
 
@@ -2156,7 +2011,6 @@ function withdrawalBroadcastResponse(res) {
     */
 
   } else {
-    console.log(res.error.error.message)
     withdrawalErrorResponseContainer.classList.remove('hidden')
     withdrawalErrorResponse.innerHTML = res.error.error.message
 
@@ -2170,8 +2024,6 @@ async function responseBankerSignture(data) {
   const account = data.account
   const message = data.message
 
-  console.log("message: ", message)
-  console.log("message.withdrawal_id: ", message.withdrawal_id)
   // Loop thru the account withdrawal array And
   // get the list of bankers that already signed
   const bankers = account.bankers
@@ -2179,20 +2031,17 @@ async function responseBankerSignture(data) {
   let signedBankers = []
 
   for (const [index, withdrawal] of account.withdrawals.entries()) {
-    console.log("withdrawal.id: ", typeof(withdrawal.id))
     if (withdrawal.id === Number(message.withdrawal_id)) {
-      console.log("withdrawal: ", withdrawal)
+      
       let sx = withdrawal.signatures
       for (const [index, signature] of sx.entries()) {
-        console.log("signature: ", signature)
         if (signature.status === "SIGNED") {
           signedBankers.push(signature)
         }
       }
     }
   }
-  console.log("signedBankers: ", typeof(signedBankers))
-  console.log("signedBankers: ", signedBankers)
+  
   const bankersArray = bankers.filter((elem) => !signedBankers.find((banker) => elem.banker_id === banker.banker_id));
 
   let selectNextBankerScreen = document.getElementById('request-sig-next-banker-select')
@@ -2245,7 +2094,6 @@ async function responseBankerSignture(data) {
   let generateBtn = document.getElementById('generate-next-sign-message')
   generateBtn.addEventListener('click', () => {
     const banker = select.options[select.selectedIndex].value;
-    console.log("banker: ", banker)
 
     if (banker) {
       // let parsedBanker = JSON.parse(banker)
@@ -2255,7 +2103,7 @@ async function responseBankerSignture(data) {
         message,
         "banker": JSON.parse(banker)
       }
-      console.log("optiondata: ", optiondata)
+      
       ownerSaveNextBanker(optiondata)
     } else {
       alertError("Please select a banker.")
@@ -2268,7 +2116,6 @@ async function ownerSaveNextBanker(data) {
   let account = data.account
 	let message = data.message
 	let next_banker = data.banker
-  console.log("next_banker: ", next_banker)
 
   const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
 	if (accounts) {
@@ -2292,7 +2139,6 @@ async function ownerSaveNextBanker(data) {
 					    "currency": message.currency,
 							"withdrawal_id": message.withdrawal_id,
 					  }
-					  console.log("new message: ", newMessage)
 
 					  // Create new signature object in the account signature array
 					  const newSignatory = {
@@ -2377,15 +2223,11 @@ async function ownerShowBankerSignatureMessage(message) {
   closeButton.classList.add("items-center", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "mt-5", "text-white", "bg-orange-500", "rounded-lg", "focus:ring-4", "focus:ring-blue-200", "dark:focus:ring-orange-500", "hover:bg-orange-500")
   closeButton.innerHTML = "Close"
   closeButton.addEventListener("click", function() {
-    // bankerForm.classList.remove('hidden')
-    // bankersList.classList.remove('hidden')
-    // bankerMessage.classList.add('hidden')
     importArea.classList.remove('hidden')
     ownerMessageSignRequest.classList.add('hidden')
     importText.value = ""
 
     showImportListScreen()
-    console.log("close sign request message")
   }, false);
 
   buttonDiv.appendChild(closeButton)
@@ -2411,7 +2253,6 @@ async function bankerSignatureRequest (message) {
   }
   const tx = coin_js.transaction()
   const deserializeTx = tx.deserialize(message.transaction_id_for_signature)
-  console.log("deserialize tx: ", deserializeTx)
 
   let inputs = deserializeTx.ins
   let outputs = deserializeTx.outs
@@ -2419,35 +2260,6 @@ async function bankerSignatureRequest (message) {
   for (let i = 0; i < inputs.length; i++) {
     var s = deserializeTx.extractScriptKey(i);
     let input = inputs[i]
-    // console.log("s: ", s.script)
-    // console.log("N: ", input.outpoint.index)
-    // console.log(input.outpoint.hash)
-    // let inputs1 = document.createElement('input')
-    // inputs1.setAttribute('readonly', true)
-    // inputs1.setAttribute('class', 'md:flex px-3 bg-gray-300 text-black h-10 left-96 py-2 w-96');
-    // inputs1.value = input.outpoint.hash
-    // let row = inputsTable.insertRow();
-    // let txid = row.insertCell(0);
-    // // txid.innerHTML = input.outpoint.hash
-    // txid.appendChild(inputs1)
-    // txid.setAttribute('width', '45%')
-    // let inputs2 = document.createElement('input')
-    // inputs2.setAttribute('readonly', true)
-    // inputs2.setAttribute('class', 'text-black text-center');
-    // inputs2.value = input.outpoint.index
-    // let indexNo = row.insertCell(1);
-    // indexNo.setAttribute('class', 'text-center bg-white text-black font-semibold')
-    // indexNo.innerHTML = input.outpoint.index
-    // // indexNo.appendChild(inputs2)
-    // indexNo.setAttribute('width', '10%')
-    // let inputs3 = document.createElement('input')
-    // inputs3.setAttribute('readonly', true)
-    // inputs3.setAttribute('class', 'md:flex bg-gray-300 pl-1 h-10 text-black px-3 py-2 w-full');
-    // inputs3.value = s.script
-    // let script = row.insertCell(2);
-    // // script.innerHTML = s.script
-    // script.appendChild(inputs3)
-    // script.setAttribute('width', '45%')
 
     let div = document.createElement('div')
     div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
@@ -2476,7 +2288,6 @@ async function bankerSignatureRequest (message) {
   for (let i = 0; i < outputs.length; i++) {
 
     let output = outputs[i]
-      console.log("output: ", output)
     if(output.script.chunks.length==2 && output.script.chunks[0]==106){ // OP_RETURN
 
       var data = Crypto.util.bytesToHex(output.script.chunks[1]);
@@ -2567,9 +2378,6 @@ async function bankerSignatureRequest (message) {
 }
 
 function bankerSignTransaction(message, privkey) {
-  console.log("sign tx: ", message.transaction_id_for_signature)
-  console.log("user privkey: ", privkey)
-
 
   let tx
   if (message.currency === "woodcoin") {
@@ -2582,8 +2390,6 @@ function bankerSignTransaction(message, privkey) {
 
   const scriptToSign = tx.deserialize(message.transaction_id_for_signature)
   const signedTX = scriptToSign.sign(privkey, 1)
-
-  console.log("signed: ", signedTX)
 
   bankerVerifyWithdrawal.classList.add('hidden')
   bankerMessageSignTx.classList.remove('hidden')
@@ -2644,7 +2450,6 @@ function bankerSignTransaction(message, privkey) {
   closeButton.classList.add("items-center", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "mt-5", "text-white", "bg-orange-500", "rounded-lg", "focus:ring-4", "focus:ring-blue-200", "dark:focus:ring-orange-500", "hover:bg-orange-500")
   closeButton.innerHTML = "Close"
   closeButton.addEventListener("click", function() {
-    console.log("close sign response message")
 
     importArea.classList.remove('hidden')
     bankerMessageSignTx.classList.add('hidden')
@@ -2682,7 +2487,6 @@ async function bankerPukey(message) {
     }
     coin_js.compressed = true
     const userAddress = await coin_js.newKeys()
-    console.log(userAddress)
 
     let privkeyHexInput = document.getElementById('pivkey-hex')
     let privkeyWifInput = document.getElementById('pivkey-wif')
@@ -2732,8 +2536,6 @@ async function bankerPukey(message) {
 }
 
 function finalizeNewKeys(evt){
-    // const accountUser = JSON.parse(evt)
-    console.log(evt)
     const textBody = document.getElementById('text-show')
     const textId = document.getElementById('import-show')
     const textImport = document.getElementById('import-area')
@@ -2766,7 +2568,6 @@ function finalizeNewKeys(evt){
     p3.innerHTML = "-----Begin fscb message-----";
     p4.innerHTML = JSON.stringify(evt, undefined, 2);
     p5.innerHTML = "-----End fscb message-----";
-    // p4.setAttribute("class", "w-10")
     p4.classList.add('whitespace-pre-wrap', 'break-all')
 
     const copyToClipboardText = p1.innerHTML + '\n' + p2.innerHTML + '\n' + p3.innerHTML + '\n' + p4.innerHTML  + '\n' +  p5.innerHTML
@@ -2820,13 +2621,11 @@ function isKeyValid(hex) {
 /* response banker pubkey */
 
 async function bankerPubkeyResponse(evt) {
-    console.log(evt)
+    
     const bankersData = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
     if (bankersData) {
-      console.log("got all bankers ", bankersData)
-
+      
       for (const i in bankersData) {
-        console.log("i: ", bankersData[i])
         if (bankersData[i].banker_id == evt.banker_id) {
           bankersData[i].pubkey = evt.pubkey
         
@@ -2843,30 +2642,14 @@ async function bankerPubkeyResponse(evt) {
 /* Create contract */
 async function saveAndCreateText(e) {
     e.preventDefault();
-    // console.log(contractName.value, " ", creatorName.value, " ", creatorEmail.value)
+    
     const contractSendName = contractName.value;
     const creatorSendName = USER.user_name;
     const creatorSendEmail = USER.user_email;
 
-    coinjs.compressed = true
-    const creatorAddressDetail = await coinjs.newKeys()
-    // console.log("New Key ", creatorAddressDetail)
     const sigSendNumber = sigNumber.options[sigNumber.selectedIndex].text;
     const coinCurrencySend = currency.options[currency.selectedIndex].text;
     const innerMultiKey = document.querySelectorAll('.activeClass a')
-    console.log(innerMultiKey)
-
-    /**
-      New account data validation
-    **/
-    if (contractSendName == "") return alertError("Contract name is required.")
-    if (innerMultiKey.length == 0) return alertError("Please select a banker")
-
-    let bankersMerge = [];
-    for (let i = 0; i < innerMultiKey.length; i++) {
-        bankersMerge.push(innerMultiKey[i].dataset.value)
-    }
-    console.log("banker merge ", bankersMerge)
 
     let coin_js
 
@@ -2880,9 +2663,24 @@ async function saveAndCreateText(e) {
       console.log("invalid currency")
     }
 
+    coin_js.compressed = true
+    const creatorAddressDetail = await coin_js.newKeys()
+
+
+    /**
+      New account data validation
+    **/
+    if (contractSendName == "") return alertError("Contract name is required.")
+    if (innerMultiKey.length == 0) return alertError("Please select a banker")
+
+    let bankersMerge = [];
+    for (let i = 0; i < innerMultiKey.length; i++) {
+        bankersMerge.push(innerMultiKey[i].dataset.value)
+    }
+
+
     const keys = bankersMerge;
     const multisig =  coinjs.pubkeys2MultisigAddress(keys, sigSendNumber);
-    console.log("multisig ", multisig)
     const pubkeySend = multisig.address;
     const redeemScriptSend = multisig.redeemScript;
 
@@ -2904,8 +2702,7 @@ async function contractnew (options) {
     const getIdNumber = await idNumber()
     const mybankers = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
     let mergeBankers = []
-    console.log("options: ", options)
-    console.log("mybankers: ", mybankers)
+  
     for (let i = 0; i < options.bankersMerge.length; i++ ) {
       for (let j in mybankers) {
         if (options.bankersMerge[i] === mybankers[j].pubkey) {
@@ -2913,12 +2710,11 @@ async function contractnew (options) {
         }
       }
     }
-    console.log("mergeBankers: ", mergeBankers)
+    
 
     let data = {
         "id": Math.floor(1000000000 + Math.random() * 9000000000),
         "contract_id": getIdNumber,
-        // "txt_file_reference": contractTextReference,
         "contract_name": options.contractSendName,
         "creator_name": options.creatorSendName,
         "creator_email": options.creatorSendEmail,
@@ -2926,7 +2722,6 @@ async function contractnew (options) {
         "signature_nedded": options.sigSendNumber,
         "address": options.pubkeySend,
         "redeem_script": options.redeemScriptSend,
-        //"signatures": [],
         "withdrawals": [],
         "balance": "0.0",
         "currency": options.coinCurrencySend,
@@ -2936,11 +2731,9 @@ async function contractnew (options) {
     try {
       const contents = localStorage.getItem('accounts') ? JSON.parse(localStorage.getItem('accounts')) : null
       if (contents) {
-        console.log("if write contract has been called")
-        
+      
         const contentnew = contents
         contentnew["contract" + getIdNumber] = data
-        console.log("contents ", contentnew)
         
         // Update accounts data in the localStorage
         localStorage.setItem("accounts", JSON.stringify(contentnew))
@@ -2948,7 +2741,6 @@ async function contractnew (options) {
         updateAccountListScreen(contentnew)
         showImportListScreen()
       } else {
-        console.log("add contract else has been called")
         const addContract = {
             ["contract" + getIdNumber]: data
           }
@@ -3095,7 +2887,6 @@ async function contractnew (options) {
   }
 
   function addOrDelete(id) {
-      console.log("click add or delete")
       const mainKey = document.getElementById('address-amount')
 
       let div = document.createElement('div');
@@ -3106,7 +2897,6 @@ async function contractnew (options) {
       input1.setAttribute('class', 'text-base text-black font-normal h-10 col-span-2 mt-2')
       input1.setAttribute('placeholder', 'Enter Address')
       let input2 = document.createElement('input')
-      // input2.addEventListener('onchange', ()=> {console.log("amount: ", input2.value)})
       input2.setAttribute('class', 'text-base text-black font-normal h-10 col-span-1 mt-2 user-input-amount')
       input2.setAttribute('placeholder', 'Enter Amount')
 
@@ -3140,7 +2930,6 @@ async function contractnew (options) {
       mainKey.appendChild(div)
 
       minus.addEventListener('click', (e) => {
-        console.log('minus click')
         deleteInput(e)
         if (input2.value) amountOnchangeSubtract(input2.value)
       })
@@ -3186,8 +2975,6 @@ async function contractnew (options) {
 
     TOTAL_AMOUNT_TO_WITHDRAW -= Number(amount)
     withdrawalFee.value = (unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8)
-    console.log("amount to subtract: ", amount)
-    console.log("withdrawal fee: ", unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW)
   }
 
   let withdrawAmountInput = document.getElementById('withdraw-amount')
@@ -3200,7 +2987,6 @@ async function contractnew (options) {
     let userInputtedFee = withdrawFeeInput.value
 
     let change = (unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8)
-    console.log("change: ", change)
 
     if (unspentAmountTotal < TOTAL_AMOUNT_TO_WITHDRAW) {
       alertError("Insufficient balance. Please adjust the withdrawal amount.")
@@ -3221,7 +3007,6 @@ async function contractnew (options) {
     } else if (userInputtedFee > change) {
       alertError("Transaction fee is greater than remaining amount. Please adjust.")
     } else if (userInputtedFee < change) {
-      console.log("should generate change address")
       let amountToChangeAddress = unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW - userInputtedFee
       generateClaim(amountToChangeAddress)
     }
@@ -3229,24 +3014,6 @@ async function contractnew (options) {
   }
 
   async function generateClaim(changeAmount) {
-    console.log("generate claim")
-    console.log("account currency: ", ACCOUNT_CURRENCY)
-    //e.preventDefault()
-    // const txid = document.getElementById('txid-withdraw').value
-    // const vout = document.getElementById('vout-withdraw').value
-    // const script = document.getElementById('script-withdraw').value
-    // const amount = document.getElementById('amount-withdraw').value
-    // const address = document.getElementById('withdraw-address').value
-    // const amountWithdraw = document.getElementById('withdraw-amount').value
-    // console.log("txid ", txid)
-    // console.log('address ', address)
-    // let tx = coinjs.transaction();
-    // let scriptN = coinjs.script()
-    // tx.addinput(txid, vout, script, amount, null)
-    // tx.addoutput(address, amountWithdraw)
-    // const out = await tx.serialize()
-    // console.log("tx serialize", out)
-    // console.log("decode tx serialize", tx.deserialize(out))
     let coin_js
     if (ACCOUNT_CURRENCY === "woodcoin") {
       coin_js = coinjs
@@ -3262,7 +3029,6 @@ async function contractnew (options) {
     let tx = coin_js.transaction()
     const getunspent = document.querySelectorAll('#inner-unspent')
     const getuserinput = document.querySelectorAll('#address-keys')
-    //const changeAddressinput = document.getElementById('change-address')
     let userunspentindex;
     let userinputindex;
     let unspentindexsum = 0;
@@ -3274,28 +3040,20 @@ async function contractnew (options) {
 
     inputsTable.innerHTML = ""
     outputsTable.innerHTML = ""
-    console.log("get unspent", getunspent)
     for(let i = 0; i < getunspent.length; i++) {
       if(getunspent[i].children[5].defaultChecked) {
         userunspentindex = i
-        console.log(getunspent[i].children[3].value)
         unspentindexsum += Number(getunspent[i].children[3].value)
         tx.addinput(getunspent[i].children[0].value, getunspent[i].children[1].value, getunspent[i].children[2].value, null)
       }
-      // if(i === getunspent.length -1) {
-      //   tx.addoutput(address, amountWithdraw)
-      //   const out = await tx.serialize()
-      //   console.log(out)
-      // }
     }
-    console.log(getuserinput)
+    
     for (let i = 0; i < getuserinput.length; i++) {
       let address = getuserinput[i].children[0].value
       let amount = getuserinput[i].children[1].value
 
       userinputindex = i
       userinputsum += Number(amount)
-      console.log(address, amount)
 
       let isValidAddress = coinjs.addressDecode(address)
       if (isValidAddress == false) {
@@ -3306,24 +3064,10 @@ async function contractnew (options) {
       }
     }
 
-    // if (changeAddressinput) {
-    //   console.log("changeAddressinput amount: ", changeAddressinput.children[1].value)
-    //   console.log("changeAddressinput address: ", changeAddressinput.children[0].value)
-    //   userinputsum += changeAddressinput.children[1].value
-    //   tx.addoutput(changeAddressinput.children[0].value, changeAddressinput.children[1].value)
-    // }
-
-    /**
-      Add a change address to the tx.addoutput if change is greater than withdrawal fee
-    **/
-    console.log("unspentindexsum: ", unspentindexsum)
-    console.log("userinputsum: ", userinputsum)
-
     /**
       Disabled automatic addition of change address
     **/
     if (changeAmount) {
-      console.log('add ouput: ', CHANGE_ADDRESS, changeAmount)
       tx.addoutput(CHANGE_ADDRESS, changeAmount)
     }
     /**End of automatically adding change address**/
@@ -3338,16 +3082,12 @@ async function contractnew (options) {
       accountActions.classList.add('hidden')
       withdrawalReference.classList.remove('hidden')
       txRedeemTransaction = tx.serialize();
-      // console.log("redeem script", getunspent[0].children[4].value)
-    //   ipcRenderer.send('getredeemscript:redeemscript', {"script": getunspent[0].children[4].value});
       const sigScript = {
         "script": getunspent[0].children[4].value
       }
       accountSigFilter = await getredeemscriptRedeemscript(sigScript)
       const deserializeTx = tx.deserialize(tx.serialize())
-      console.log("deserialize tx: ", deserializeTx)
-      console.log("txRedeemTransaction: ", txRedeemTransaction)
-      console.log("tx size: ", tx.size())
+      
       let inputs = deserializeTx.ins
       let outputs = deserializeTx.outs
 
@@ -3382,7 +3122,6 @@ async function contractnew (options) {
       for (let i = 0; i < outputs.length; i++) {
 
         let output = outputs[i]
-          console.log("output: ", output)
         if(output.script.chunks.length==2 && output.script.chunks[0]==106){ // OP_RETURN
 
           var data = Crypto.util.bytesToHex(output.script.chunks[1]);
@@ -3391,19 +3130,6 @@ async function contractnew (options) {
           if(dataascii.match(/^[\s\d\w]+$/ig)){
             data = dataascii;
           }
-          console.log("address: ", data)
-          console.log("amount: ", (output.value/100000000).toFixed(8))
-          console.log("script: ", Crypto.util.bytesToHex(output.script.buffer))
-          // let row = outputsTable.insertRow();
-          // let address = row.insertCell(0);
-          // address.innerHTML = data
-          // address.setAttribute('width', '45%')
-          // let amount = row.insertCell(1);
-          // amount.innerHTML = (output.value/100000000).toFixed(8)
-          // amount.setAttribute('width', '10%')
-          // let script = row.insertCell(2);
-          // script.innerHTML = Crypto.util.bytesToHex(output.script.buffer)
-          // script.setAttribute('width', '45%')
 
           let div = document.createElement('div')
           div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
@@ -3470,17 +3196,7 @@ async function contractnew (options) {
       generateButton.addEventListener('click', function() {
         selectBankerToSign(txRedeemTransaction, accountSigFilter)
       }, false)
-    } else {
-      console.log("userunspentindex: ", userunspentindex)
-      console.log("getunspent.length -1: ", getunspent.length -1)
-      console.log("userinputindex: ", userinputindex)
-      console.log("getuserinput.length -1: ", getuserinput.length -1)
     }
-
-
-    // if (userinputsum > unspentindexsum) {
-    //   alertError("You are spending more than you have")
-    // }
 
   }
 
@@ -3525,7 +3241,6 @@ async function contractnew (options) {
     generateBtn.addEventListener('click', () => {
       let selectBanker = document.getElementById('select-bankers-to-sign')
       const banker = select.options[select.selectedIndex].value;
-      console.log("banker: ", banker)
 
       if (banker) {
         let parsedBanker = JSON.parse(banker)
@@ -3538,13 +3253,12 @@ async function contractnew (options) {
   }
 
   async function getredeemscriptRedeemscript(options) {
-    console.log("options script: ", options.script)
+    
     const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
     const accountFilter = Object.values(accounts).filter(value => {
-      console.log("filter value", value);
       return value.redeem_script === options.script;
     });
-    console.log("account filter: ", accountFilter)
+    
     return accountFilter
   };
 
@@ -3585,24 +3299,13 @@ function closeSendSignatureScreen() {
     withdrawAmtInput.value = 0
 
     let withdrawalID = Date.now()
-    // let accountDetails = document.getElementById('account-details')
-    // let accountWithdrawal = document.getElementById('account-withdrawal')
-    // let accountActions = document.getElementById('account-actions')
-    // let withdrawalReference = document.getElementById('withdraw-reference')
     let sendSignature = document.getElementById('send-signature')
     let messageSignature = document.getElementById('request-sig-message')
     let selectBankerScreen = document.getElementById('request-sig-banker-select')
     messageSignature.innerHTML = ""
-    // accountDetails.classList.add('hidden')
-    // accountWithdrawal.classList.add('hidden')
-    // accountActions.classList.add('hidden')
-    // withdrawalReference.classList.add('hidden')
     selectBankerScreen.classList.add('hidden')
     sendSignature.classList.remove('hidden')
-    console.log("tx: ", tx)
-    console.log("account: ", typeof(account))
     const accountParse = account
-    console.log("account parse: ", accountParse)
     const br = document.createElement('br')
 
     const p1 = document.createElement('p')
@@ -3682,7 +3385,7 @@ function closeSendSignatureScreen() {
       "transaction_id": "",
       "action": "Request for signature"
     }
-    console.log("action data: ", data)
+  
     const newWithdrawal = {
       id: withdrawalID,
       signatures: [
@@ -3690,13 +3393,12 @@ function closeSendSignatureScreen() {
       ]
     }
     accountParse[0].withdrawals.push(newWithdrawal)
-    console.log("account parse withdrawals ", accountParse[0])
+    
     const signEncode = {
       "id": accountParse[0].contract_id,
       "contract": accountParse[0]
     }
-    // ipcRenderer.send('signature:encode', {"id": accountParse[0].contract_id, "contract": accountParse[0]})
-    // console.log("new account parse", JSON.stringify(accountParse[0]))
+    
     signatureEncode(signEncode)
   }
 
@@ -3716,9 +3418,7 @@ async function signatureEncode (data) {
   Function to export json data
 **/
 function exportJsonData() {
-  console.log("export users data")
-
-  console.log("export main")
+  
 	const parsedUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null 
 	const parsedBankers = localStorage.getItem('bankers') ? JSON.parse(localStorage.getItem('bankers')) : null
 	const parsedAccounts = localStorage.getItem('accounts') ? JSON.parse(localStorage.getItem('accounts')) : null
@@ -3745,7 +3445,6 @@ function exportJsonData() {
   the copy and save it
 **/
 function displayExportData(message) {
-  //alertSuccess("Successfully created a backup file.")
   let backupBtnContainer = document.getElementById('backup-btn-container')
   let backupMessageContainer = document.getElementById('backup-message-container')
   let backupMessageBody = document.getElementById('backup-message')
@@ -3789,7 +3488,6 @@ function displayExportData(message) {
   backupMessageBody.appendChild(div)
 
   closeBtn.addEventListener("click", function() {
-    console.log("close back up screen")
     backupBtnContainer.classList.remove('hidden')
     backupMessageContainer.classList.add('hidden')
     showImportListScreen()
@@ -3821,14 +3519,9 @@ formCreateAccount.addEventListener("submit", saveAndCreateText);
 importTextForm.addEventListener('submit', parseTextArea);
 userProfileForm.addEventListener('submit', createUserProfile);
 withdrawalAddBtn.addEventListener('click', () => {addOrDelete('address-keys')});
-// //minusButton.addEventListener('click', deleteInput);
 formAddBanker.addEventListener('submit', addBanker);
-// getbankerClick.addEventListener('click', getBanker)
-// getListClick.addEventListener('click', getList)
 importTextButton.addEventListener('click', openImportTextTab)
 mobileImportTextButton.addEventListener('click', openImportTextTab)
-// getbankerClick.addEventListener('click', getBanker);
-// getListClick.addEventListener('click', getList);
 formWithdraw.addEventListener('submit', checkTxFee);
 donateBtn.addEventListener('click', addDonationAddress);
 exportBtn.addEventListener('click', exportJsonData);
