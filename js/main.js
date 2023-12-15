@@ -1147,6 +1147,7 @@ async function addBanker(e) {
       addBankerButton("enable")
       return
     }
+    if (bankerName.length > 75) return alertError("Banker name should not be more than 75 characters.")
     if (bankerEmail) {
       let validEmail = isEmailValid(bankerEmail)
       if (!validEmail) {
