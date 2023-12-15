@@ -191,6 +191,22 @@ refreshBtn.addEventListener("click", () => {
 **/
 
 
+/**
+ * Sanitize inputs by replacing HTML tags with a null string
+ */
+function removeTagsFromInput(str) {
+  if ((str===null) || (str===''))
+      return false;
+  else
+      str = str.toString();
+       
+  return str.replace( /(<([^>]+)>)/ig, '');
+}
+/**
+ * End of sanitation
+ */
+
+
 function setAccountCurrency() {
   const coinCurrencySend = currency.options[currency.selectedIndex].text;
   ACCOUNT_CURRENCY = coinCurrencySend
@@ -1120,7 +1136,7 @@ async function addBanker(e) {
     const selectElement = document.querySelector('#banker-coin-currency');
     const bankerCurrency = selectElement.options[selectElement.selectedIndex].text;
 
-    const bankerName = nameInput.value
+    const bankerName = removeTagsFromInput(nameInput.value)
     const bankerEmail = emailInput.value
     
     /**
@@ -2643,13 +2659,15 @@ async function bankerPubkeyResponse(evt) {
 async function saveAndCreateText(e) {
     e.preventDefault();
     
-    const contractSendName = contractName.value;
+    const contractSendName = removeTagsFromInput(contractName.value);
     const creatorSendName = USER.user_name;
     const creatorSendEmail = USER.user_email;
 
     const sigSendNumber = sigNumber.options[sigNumber.selectedIndex].text;
     const coinCurrencySend = currency.options[currency.selectedIndex].text;
     const innerMultiKey = document.querySelectorAll('.activeClass a')
+
+
 
     let coin_js
 
@@ -2671,7 +2689,9 @@ async function saveAndCreateText(e) {
       New account data validation
     **/
     if (contractSendName == "") return alertError("Contract name is required.")
+    if (contractSendName.length > 75) return alertError("Contract name should not be more than 75 characters.")
     if (innerMultiKey.length == 0) return alertError("Please select a banker")
+    if (innerMultiKey.length < parseInt(sigSendNumber)) return alertError("Number of required signature should not be more than the number of bankers.")
 
     let bankersMerge = [];
     for (let i = 0; i < innerMultiKey.length; i++) {
@@ -2680,7 +2700,7 @@ async function saveAndCreateText(e) {
 
 
     const keys = bankersMerge;
-    const multisig =  coinjs.pubkeys2MultisigAddress(keys, sigSendNumber);
+    const multisig =  coin_js.pubkeys2MultisigAddress(keys, sigSendNumber);
     const pubkeySend = multisig.address;
     const redeemScriptSend = multisig.redeemScript;
 
