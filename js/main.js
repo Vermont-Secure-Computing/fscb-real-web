@@ -2543,12 +2543,19 @@ async function bankerPukey(message) {
 
     finalizeKeys.addEventListener('click', () => {
 
-      let pubkey = pubkeyInput.value
-      message.message = "response-pubkey"
-      message.pubkey = pubkey
+      let response = confirm("Are you sure you have save the keys in a safe place?")
+      if (response == true) {
+        let pubkey = pubkeyInput.value
+        message.message = "response-pubkey"
+        message.pubkey = pubkey
 
-      bankerGeneratePrivkey.classList.add('hidden')
-      finalizeNewKeys(message)
+        bankerGeneratePrivkey.classList.add('hidden')
+        finalizeNewKeys(message)
+      } else {
+          console.log("not saved")
+      }
+
+      
     })
 
     return
