@@ -504,3 +504,8 @@ body {
   visibility: hidden;
   transform: translate(-4px, 0);
 }
+
+.mh-90vh {
+    max-height: 90vh;
+    overflow: auto;
+}
