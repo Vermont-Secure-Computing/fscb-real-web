@@ -12,11 +12,12 @@
 	/* public vars */
 	litecoinjs.pub = 0x30;
 	litecoinjs.priv = 0xB0;
-	litecoinjs.multisig = 0x05;
+	litecoinjs.multisig = 0x32;
 	litecoinjs.hdkey = {'prv':0x0488ade4, 'pub':0x0488b21e};
-	litecoinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'bc'};
+	litecoinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'ltc'};
 
-	litecoinjs.compressed = false;
+	//litecoinjs.compressed = false;
+	litecoinjs.compressed = true;
 
 	/* other vars */
 	litecoinjs.developer = '33tht1bKDgZVxb39MnZsWa8oxHXHvUYE4G'; //bitcoin

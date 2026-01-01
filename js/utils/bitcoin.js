@@ -16,7 +16,7 @@
 	bitcoinjs.hdkey = {'prv':0x0488ade4, 'pub':0x0488b21e};
 	bitcoinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'bc'};
 
-	bitcoinjs.compressed = false;
+	bitcoinjs.compressed = true; //previously false
 
 	/* other vars */
 	bitcoinjs.developer = '33tht1bKDgZVxb39MnZsWa8oxHXHvUYE4G'; //bitcoin
