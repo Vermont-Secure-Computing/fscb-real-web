@@ -108,6 +108,12 @@
               <li class="list-disc marker:text-yellow-500 px-4 text-white font-semibold text-xl py-2 rounded-t"><a href="#fifth">How it works</a></li> -->
               <hr class="bg-gray-500 opacity-10 dark:opacity-50"/>
               <li class="list-disc marker:text-gray-800 px-4 text-white font-semibold text-xl py-2 rounded-t"><a href="#sixth">Backup</a></li>
+
+              <!-- <hr class="bg-gray-500 opacity-10 dark:opacity-50"/>
+              <li class="list-disc marker:text-cyan-400 px-4 text-white font-semibold text-xl py-2 rounded-t">
+                <a class="gettxbuilderClick" href="#txbuilder">TX Builder</a>
+              </li> -->
+
             </ul>
           </ul>
         </aside>
@@ -851,6 +857,133 @@
               </div>
             </div>
           </div>
+
+          <!-- TX BUILDER SCREEN -->
+          <section id="txbuilder" class="hidden">
+            <div class="p-4">
+
+              <!-- Tabs -->
+              <div id="tx-tabs" class="flex gap-2 mb-4 border-b border-gray-300 pb-2">
+                <button id="tx-tab-create" class="px-4 py-2 rounded bg-orange-500 text-white">Create Transaction</button>
+                <button id="tx-tab-broadcast" class="px-4 py-2 rounded bg-white text-gray-600 border">Broadcast</button>
+              </div>
+
+              <!-- CREATE VIEW -->
+              <div id="tx-create-view">
+                <div class="grid md:grid-cols-2 gap-6">
+
+                  <!-- LEFT: Inputs -->
+                  <div>
+                    <div class="font-semibold text-white mb-2">Inputs (V-INs)</div>
+
+                    <!-- Currency -->
+                    <div class="mb-3">
+                      <label class="text-sm text-gray-700 text-white">Currency</label>
+                      <select id="tx-currency" class="w-full p-2 border rounded text-black">
+                        <option value="bitcoin">bitcoin</option>
+                        <option value="litecoin">litecoin</option>
+                      </select>
+                    </div>
+
+                    <!-- API UTXOs -->
+                    <div class="mb-2 text-sm text-gray-700">API UTXOs</div>
+                    <div id="tx-api-utxos" class="space-y-2"></div>
+
+                    <!-- Manual V-Ins -->
+                    <div class="mt-4">
+                      <div id="tx-manual-rows" class="mt-2"></div>
+
+                      <button id="tx-add-manual" type="button"
+                        style="color:#f97316"
+                        class="mt-3 text-orange-600 hover:underline text-sm">
+                        + Add v-ins
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- RIGHT: Outputs -->
+                  <div>
+                    <div class="font-semibold text-white mb-2">Outputs (V-OUTs)</div>
+
+                    <div id="tx-outputs" class="space-y-2"></div>
+
+                    <button id="tx-add-output" type="button"
+                      style="color:#f97316"
+                      class="mt-3 !text-orange-600 hover:underline text-sm">
+                      + Add output
+                    </button>
+
+                    <!-- Totals -->
+                    <div class="text-whit mt-5 p-3 border rounded bg-white">
+                      <div class="text-sm text-gray-700 flex justify-between">
+                        <span>Total Input</span>
+                        <span id="tx-total-in" class="text-black">0.00000000</span>
+                      </div>
+                      <div class="text-sm text-gray-700 flex justify-between mt-1">
+                        <span>Total Output</span>
+                        <span id="tx-total-out" class="text-black">0.00000000</span>
+                      </div>
+                      <div class="text-sm text-gray-700 flex justify-between mt-1">
+                        <span>Fee</span>
+                        <span id="tx-fee" class="text-black">0.00000000</span>
+                      </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-4 flex gap-2">
+                      <button id="tx-create-btn" class="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600">
+                        Create Raw TX
+                      </button>
+
+                      <button id="tx-copy-btn" class="px-4 py-2 rounded bg-gray-200 text-white hover:bg-gray-300">
+                        Copy
+                      </button>
+                    </div>
+
+                    <!-- TX Hex -->
+                    <div class="mt-3">
+                      <div class="text-white text-sm text-gray-700 mb-1">Raw TX Hex</div>
+                      <textarea id="tx-hex" class="w-full p-2 border rounded text-white" rows="6" placeholder="Generated tx hex will appear here"></textarea>
+                    </div>
+
+                    <div id="tx-create-error" class="mt-2 text-sm text-red-600 hidden"></div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- BROADCAST VIEW -->
+              <div id="tx-broadcast-view" class="hidden">
+                <div class="max-w-3xl">
+                  <div class="font-semibold text-white mb-2">Broadcast Signed Transaction</div>
+
+                  <div class="mb-3">
+                    <label class="text-sm text-gray-700">Currency</label>
+                    <select id="tx-broadcast-currency" class="w-full p-2 border rounded text-white">
+                      <option value="bitcoin">bitcoin</option>
+                      <option value="litecoin">litecoin</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="text-sm text-gray-700 mb-1">Signed TX Hex</div>
+                    <textarea id="tx-broadcast-hex" class="w-full p-2 border rounded text-white" rows="7"
+                      placeholder="Paste signed tx hex here..."></textarea>
+                  </div>
+
+                  <button id="tx-broadcast-btn" class="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600">
+                    Broadcast
+                  </button>
+
+                  <div id="tx-broadcast-result" class="mt-3 text-sm hidden"></div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+
+
         </div>
       </div>
       <div id="user-profile" class="p-3 md:p-2 hidden h-screen bg-[#1a1a1a] flex justify-center items-center">

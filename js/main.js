@@ -160,17 +160,30 @@ tabTogglers.forEach(function(toggler) {
         if (tabName === "#second") {
             accountBankerData()
         }
+        if (tabName === "#txbuilder") {
+          showTxBuilderScreen()
+        }
+
         let tabContents = document.querySelector("#tab-contents");
         
-        for (let i = 0; i < tabContents.children.length-1; i++) {
-          let tab = i + 1
-          tabContents.children[tab].classList.remove("hidden");
-          if ("#" + tabContents.children[tab].id === tabName) {
-              continue;
-          }
-          tabContents.children[tab].classList.add("hidden");
+        // for (let i = 0; i < tabContents.children.length-1; i++) {
+        //   let tab = i + 1
+        //   tabContents.children[tab].classList.remove("hidden");
+        //   if ("#" + tabContents.children[tab].id === tabName) {
+        //       continue;
+        //   }
+        //   tabContents.children[tab].classList.add("hidden");
 
-        }
+        // }
+        // Show only the selected tab content by id
+        Array.from(tabContents.children).forEach((child) => {
+          // ignore nodes without an id
+          if (!child.id) return;
+
+          if ("#" + child.id === tabName) child.classList.remove("hidden");
+          else child.classList.add("hidden");
+        });
+
         for (let i = 0; i < tabTogglers.length; i++) {
           tabTogglers[i].parentElement.classList.remove("bg-gradient-to-l", "from-gray-500");
         }
@@ -592,13 +605,18 @@ function getAccountDetails(account){
       **/
       let withdrawalButton = document.createElement('button')
       withdrawalButton.innerHTML = "Withdrawal"
-      if (account.balance > 0) {
-        withdrawalButton.classList.add("inline-flex", "items-center", "m-2", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "text-white", "bg-orange-500", "rounded-full", "focus:ring-4", "focus:ring-yellow-200", "dark:focus:ring-yellow-900", "hover:bg-yellow-800")
-        withdrawalButton.disabled = false;
-      } else {
-        withdrawalButton.classList.add("inline-flex", "items-center", "m-2", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "text-white", "bg-orange-500", "rounded-full", "cursor-not-allowed")
-        withdrawalButton.disabled = true;
-      }
+      // if (account.balance > 0) {
+      //   withdrawalButton.classList.add("inline-flex", "items-center", "m-2", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "text-white", "bg-orange-500", "rounded-full", "focus:ring-4", "focus:ring-yellow-200", "dark:focus:ring-yellow-900", "hover:bg-yellow-800")
+      //   withdrawalButton.disabled = false;
+      // } else {
+      //   withdrawalButton.classList.add("inline-flex", "items-center", "m-2", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "text-white", "bg-orange-500", "rounded-full", "cursor-not-allowed")
+      //   withdrawalButton.disabled = true;
+      // }
+
+      // always enable withdrawal button
+      withdrawalButton.classList.add("inline-flex", "items-center", "m-2", "px-5", "py-2.5", "text-sm", "font-medium", "text-center", "text-white", "bg-orange-500", "rounded-full", "focus:ring-4", "focus:ring-yellow-200", "dark:focus:ring-yellow-900", "hover:bg-yellow-800")
+      withdrawalButton.disabled = false;
+
       let address = {
         "address": account.address,
         "redeemscript": account.redeem_script,
@@ -834,124 +852,359 @@ function listAccountActionsBack(){
 /**
   Owner view - Account withdrawal
 **/
-async function accountWithdrawalFunc(address){
-    CHANGE_ADDRESS = address.address
-    let coin_js
-    if (address.currency === "woodcoin") {
-      coin_js = coinjs
-    } else if (address.currency === "bitcoin") {
-      coin_js = bitcoinjs
-    } else if (address.currency === "litecoin") {
-      coin_js = litecoinjs
-    } else {
-      console.log("invalid currency")
+async function accountWithdrawalFunc(address) {
+  try {
+    CHANGE_ADDRESS = address.address;
+    CURRENT_REDEEMSCRIPT = address.redeemscript;
+    console.log("current redeemscript: ", address, address.redeemscript)
+
+    // pick coin engine
+    let coin_js;
+    if (address.currency === "woodcoin") coin_js = coinjs;
+    else if (address.currency === "bitcoin") coin_js = bitcoinjs;
+    else if (address.currency === "litecoin") coin_js = litecoinjs;
+    else {
+      console.log("invalid currency", address.currency);
+      return alertError("Invalid currency");
     }
-    const responseUnspent = await unspentApi(address)
-    const listP = responseUnspent.utxo
-    const script = coin_js.script()
-    const addressScript = script.decodeRedeemScript(address.redeemscript)
 
-    let accountDetails = document.getElementById('account-details')
-    let accountWithdrawal = document.getElementById('account-withdrawal')
-    let accountActions = document.getElementById('account-actions')
-    let unspentdiv = document.getElementById('list-unspent')
+    // Fetch UTXOs (online list)
+    const responseUnspent = await unspentApi(address);
+    const listP = responseUnspent?.utxo || [];
 
-    // Clear unspent list
-    unspentdiv.innerHTML = ""
-    unspentAmountTotal = 0
-    userInputAmountTotal = 0
-    TOTAL_AMOUNT_TO_WITHDRAW = 0
+    // Decode redeemscript for script-withdraw
+    const script = coin_js.script();
+    const addressScript = script.decodeRedeemScript(address.redeemscript);
 
-    let tx = coin_js.transaction();
-    accountDetails.classList.add("hidden")
-    accountWithdrawal.classList.remove("hidden")
-    accountActions.classList.add("hidden")
+    // UI containers
+    const accountDetails = document.getElementById("account-details");
+    const accountWithdrawal = document.getElementById("account-withdrawal");
+    const accountActions = document.getElementById("account-actions");
+    const unspentdiv = document.getElementById("list-unspent");
+
+    if (!unspentdiv) {
+      console.log("Missing #list-unspent container");
+      return alertError("Withdrawal UI missing (list-unspent).");
+    }
+
+    // Switch screens
+    accountDetails?.classList.add("hidden");
+    accountWithdrawal?.classList.remove("hidden");
+    accountActions?.classList.add("hidden");
+
+    // Reset totals + clear list
+    unspentdiv.innerHTML = "";
+    unspentAmountTotal = 0;
+    userInputAmountTotal = 0;
+    TOTAL_AMOUNT_TO_WITHDRAW = 0;
+
+    // ---------- Fee helpers ----------
+    function getApiSelectedTotal() {
+      let total = 0;
+      const rows = document.querySelectorAll('#inner-unspent');
+      rows.forEach((r) => {
+        const cb = r.querySelector('input[type="checkbox"]');
+        const amtEl = r.querySelector('#amount-withdraw');
+        const v = Number(amtEl?.value || 0);
+        if (cb?.checked) total += v;
+      });
+      return total;
+    }
+
+    function getManualSelectedTotal(manualRows) {
+      let total = 0;
+      if (!manualRows) return 0;
+
+      const rows = manualRows.querySelectorAll('[data-manual-vin-row="1"]');
+      rows.forEach((row) => {
+        const cb = row.querySelector('input[data-role="manual-check"]');
+        if (!cb?.checked) return;
+
+        const txid = (row.querySelector('input[data-role="manual-txid"]')?.value || "").trim();
+        const voutStr = (row.querySelector('input[data-role="manual-vout"]')?.value || "").trim();
+        const script = (row.querySelector('input[data-role="manual-script"]')?.value || "").trim();
+        const amtStr = (row.querySelector('input[data-role="manual-amount"]')?.value || "").trim();
+
+        const vout = Number(voutStr);
+        const amt = Number(amtStr);
+
+        // Only count rows that are actually valid to be used
+        if (!txid) return;
+        if (!Number.isInteger(vout) || vout < 0) return;
+        if (!script) return;
+        if (!Number.isFinite(amt) || amt <= 0) return;
+
+        total += amt;
+      });
+      return total;
+    }
+
+    function syncTotals(manualRows) {
+      const apiTotal = getApiSelectedTotal();
+      const manualTotal = getManualSelectedTotal(manualRows);
+      const withdrawAmt = getTotalWithdrawalAmt();
+
+      unspentAmountTotal = apiTotal + manualTotal;
+      TOTAL_AMOUNT_TO_WITHDRAW = withdrawAmt;
+
+      if (typeof withdrawalFee !== "undefined" && withdrawalFee) {
+        withdrawalFee.value = (unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8);
+      }
+    }
 
 
-    if (unspentAmountTotal == 0) {
-        if (listP) {
-            for (let i = 0; i < listP.length; i++) {
-              let listPAmount;
-              let listPTXID;
-              let listPvout
-              if (address.currency === 'woodcoin') {
-                listPAmount = listP[i].amount / 100000000
-                listPTXID = listP[i].txid
-                listPvout = listP[i].vout
-              } else {
-                listPAmount = listP[i].value
-                listPTXID = listP[i].hash
-                listPvout = listP[i].index
-              }
-              unspentAmountTotal += Number(listPAmount)
-                let div = document.createElement('div')
-                div.setAttribute('id', 'inner-unspent')
-                div.setAttribute('class', 'grid grid-cols-4 gap-3')
-                let input1 = document.createElement('input')
-                input1.setAttribute('class', 'col-span-2 txid-withdraw text-black text-sm md:text-base text-normal p-1')
-                input1.setAttribute('id', 'txid-withdraw')
-                input1.setAttribute('readonly', true)
-                input1.value = listPTXID
-                let input2 = document.createElement('input')
-                input2.setAttribute('class', 'text-black')
-                input2.setAttribute('class', 'hidden')
-                input2.setAttribute('id', 'vout-withdraw')
-                input2.value = listPvout
-                let input3 = document.createElement('input')
-                input3.setAttribute('class', 'text-black text-sm md:text-base text-normal')
-                input3.setAttribute('class', 'hidden')
-                input3.setAttribute('id', 'script-withdraw')
-                input3.value = addressScript.redeemscript
-                let input4 = document.createElement('input')
-                input4.setAttribute('class', 'col-span-1 text-black text-sm md:text-base text-normal p-1')
-                input4.setAttribute('id', 'amount-withdraw')
-                input4.setAttribute('readonly', true)
-                input4.value = listPAmount
-                let input5 = document.createElement('input')
-                input5.setAttribute('class', 'hidden')
-                input5.value = address.redeemscript
-                let check = document.createElement('input')
-                check.setAttribute('type', 'checkbox')
-                check.setAttribute('checked', '')
-                check.addEventListener('change', (e, evt) => {
-                  let withdrawAmt = getTotalWithdrawalAmt()
+    function refreshWithdrawalFee(manualRows) {
+      syncTotals(manualRows);
+    }
 
-                  if(e.target.defaultChecked) {
-                    check.removeAttribute('checked', '')
+    // ---------- Render API UTXOs ----------
+    console.log("listP: ", listP)
+    if (Array.isArray(listP) && listP.length) {
+      for (let i = 0; i < listP.length; i++) {
+        let listPAmount, listPTXID, listPvout;
 
-                    unspentAmountTotal -= parseFloat(input4.value)
-                    withdrawalFee.value = (unspentAmountTotal - withdrawAmt).toFixed(8)
-                  } else {
-                    check.setAttribute('checked', '')
-                    unspentAmountTotal += parseFloat(input4.value)
-                    withdrawalFee.value = (unspentAmountTotal - withdrawAmt).toFixed(8)
-                  }
-                })
-                div.appendChild(input1)
-                div.appendChild(input2)
-                div.appendChild(input3)
-                div.appendChild(input4)
-                div.appendChild(input5)
-                div.appendChild(check)
-                unspentdiv.appendChild(div)
-            }
+        if (address.currency === "woodcoin") {
+          listPAmount = listP[i].amount / 100000000;
+          listPTXID = listP[i].txid;
+          listPvout = listP[i].vout;
+        } else {
+          listPAmount = listP[i].value;
+          listPTXID = listP[i].hash;
+          listPvout = listP[i].index;
         }
 
+        const amtNum = Number(listPAmount) || 0;
+
+        const div = document.createElement("div");
+        div.setAttribute("id", "inner-unspent");
+        div.setAttribute("class", "grid grid-cols-4 gap-3");
+
+        const input1 = document.createElement("input");
+        input1.setAttribute(
+          "class",
+          "col-span-2 txid-withdraw text-black text-sm md:text-base text-normal p-1"
+        );
+        input1.setAttribute("id", "txid-withdraw");
+        input1.setAttribute("readonly", true);
+        input1.value = listPTXID;
+
+        const input2 = document.createElement("input");
+        input2.setAttribute("class", "hidden");
+        input2.setAttribute("id", "vout-withdraw");
+        input2.value = listPvout;
+
+        const input3 = document.createElement("input");
+        input3.setAttribute("class", "hidden");
+        input3.setAttribute("id", "script-withdraw");
+        input3.value = addressScript.redeemscript;
+        console.log("api generated script: ", addressScript.redeemscript)
+
+        const input4 = document.createElement("input");
+        input4.setAttribute(
+          "class",
+          "col-span-1 text-black text-sm md:text-base text-normal p-1"
+        );
+        input4.setAttribute("id", "amount-withdraw");
+        input4.setAttribute("readonly", true);
+        input4.value = amtNum;
+
+        const input5 = document.createElement("input");
+        input5.setAttribute("class", "hidden");
+        input5.value = address.redeemscript;
+
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = true;
+
+        check.addEventListener("change", () => {
+          refreshWithdrawalFee(manualRows);
+        });
+
+        div.appendChild(input1);
+        div.appendChild(input2);
+        div.appendChild(input3);
+        div.appendChild(input4);
+        div.appendChild(input5);
+        div.appendChild(check);
+
+        unspentdiv.appendChild(div);
+      }
     }
-    withdrawalFee.value = (unspentAmountTotal).toFixed(8)
 
-  }
+    // ---------- Manual V-Ins UI ----------
+    let manualVinsWrap = document.getElementById("manual-vins");
+    if (!manualVinsWrap) {
+      manualVinsWrap = document.createElement("div");
+      manualVinsWrap.id = "manual-vins";
+      manualVinsWrap.className = "";
 
-  function getTotalWithdrawalAmt() {
-    const getuserinput = document.querySelectorAll('#address-keys')
-    let totalOutput = 0
+      // Rows container (manual inputs)
+      const rows = document.createElement("div");
+      rows.id = "manual-vins-rows";
+      rows.className = "space-y-1";
 
-    for (let i = 0; i < getuserinput.length; i++) {
-      let amount = getuserinput[i].children[1].value
-      totalOutput += Number(amount)
+      // "Add manual v-ins" control
+      const addWrap = document.createElement("div");
+      addWrap.id = "manual-vins-add-wrap";
+      addWrap.className = "mt-2";
+
+      const addText = document.createElement("button");
+      addText.type = "button";
+      addText.id = "manual-vins-add";
+      addText.className =
+        "text-sm md:text-base text-blue-600 hover:text-blue-700 underline underline-offset-4";
+      addText.textContent = "Add manual v-ins";
+
+      addWrap.appendChild(addText);
+
+      manualVinsWrap.appendChild(rows);
+      manualVinsWrap.appendChild(addWrap);
+
+      unspentdiv.insertAdjacentElement("afterend", manualVinsWrap);
+    } else {
+      if (manualVinsWrap.previousElementSibling !== unspentdiv) {
+        unspentdiv.insertAdjacentElement("afterend", manualVinsWrap);
+      }
     }
-    return totalOutput
+
+    const manualRows = document.getElementById("manual-vins-rows");
+    const manualAddBtn = document.getElementById("manual-vins-add");
+
+    manualRows.innerHTML = "";
+
+    function addManualVinRow() {
+      const row = document.createElement("div");
+      row.dataset.manualVinRow = "1";
+      row.className = "grid grid-cols-4 gap-3 items-center";
+
+      if (manualRows.children.length > 0) row.style.marginTop = "0.75em";
+
+      // txid
+      const txid = document.createElement("input");
+      txid.type = "text";
+      txid.placeholder = "txid";
+      txid.className = "col-span-2 txid-withdraw text-black text-sm md:text-base text-normal p-1";
+      txid.setAttribute("data-role", "manual-txid");
+
+      // vout (hidden, default 0)
+      const vout = document.createElement("input");
+      vout.type = "number";
+      vout.min = "0";
+      vout.step = "1";
+      vout.placeholder = "vout";
+      vout.className = "hidden text-black text-sm md:text-base text-normal p-1";
+      vout.setAttribute("data-role", "manual-vout");
+      vout.value = "0";
+
+      // script (hidden, auto-fill from CURRENT_REDEEMSCRIPT)
+      const scr = document.createElement("input");
+      scr.type = "text";
+      scr.placeholder = "script";
+      scr.className = "hidden text-black text-sm md:text-base text-normal p-1";
+      scr.setAttribute("data-role", "manual-script");
+      scr.value = (window.CURRENT_REDEEMSCRIPT || "").trim();
+
+      // amount (for fee calc only)
+      const amount = document.createElement("input");
+      amount.type = "number";
+      amount.step = "0.00000001";
+      amount.min = "0";
+      amount.placeholder = "amount";
+      amount.className = "col-span-1 text-black text-sm md:text-base text-normal p-1";
+      amount.setAttribute("data-role", "manual-amount");
+
+      // checkbox
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = true;
+      cb.setAttribute("data-role", "manual-check");
+      cb.style.transform = "scale(1.3)";
+      cb.style.transformOrigin = "center";
+
+      // toggle button (show/hide script + vout)
+      const toggleBtn = document.createElement("button");
+      toggleBtn.type = "button";
+      toggleBtn.textContent = "⚙️";
+      toggleBtn.title = "Show/Hide vout + script";
+      toggleBtn.className = "px-2 py-1 rounded hover:bg-gray-200 text-gray-600";
+
+      toggleBtn.addEventListener("click", () => {
+        const show = vout.classList.contains("hidden");
+        vout.classList.toggle("hidden", !show);
+        scr.classList.toggle("hidden", !show);
+
+        if (show) {
+          row.classList.remove("grid-cols-4");
+          row.classList.add("grid-cols-6");
+          txid.className = txid.className.replace("col-span-2", "col-span-2");
+          amount.className = amount.className.replace("col-span-1", "col-span-1");
+          vout.classList.remove("hidden");
+          scr.classList.remove("hidden");
+          vout.classList.add("col-span-1");
+          scr.classList.add("col-span-2");
+          actions.classList.remove("col-span-1");
+          actions.classList.add("col-span-1");
+        } else {
+          row.classList.remove("grid-cols-6");
+          row.classList.add("grid-cols-4");
+          vout.className = "hidden text-black text-sm md:text-base text-normal p-1";
+          scr.className = "hidden text-black text-sm md:text-base text-normal p-1";
+        }
+      });
+
+      // remove button
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.innerHTML = "🗑️";
+      removeBtn.title = "Remove manual v-in";
+      removeBtn.className = "px-2 py-1 rounded hover:bg-gray-200 text-gray-600";
+      removeBtn.addEventListener("click", () => {
+        row.remove();
+        refreshWithdrawalFee(manualRows);
+      });
+
+      cb.addEventListener("change", () => refreshWithdrawalFee(manualRows));
+      amount.addEventListener("input", () => refreshWithdrawalFee(manualRows));
+
+      const actions = document.createElement("div");
+      actions.className = "col-span-1 flex justify-end items-center gap-2";
+      actions.appendChild(cb);
+      actions.appendChild(toggleBtn);
+      actions.appendChild(removeBtn);
+
+      row.appendChild(txid);
+      row.appendChild(vout);
+      row.appendChild(scr);
+      row.appendChild(amount);
+      row.appendChild(actions);
+
+      manualRows.appendChild(row);
+      refreshWithdrawalFee(manualRows);
+    }
+
+
+    manualAddBtn.onclick = addManualVinRow;
+
+    // Initial fee display
+    refreshWithdrawalFee(manualRows);
+
+  } catch (err) {
+    console.error("accountWithdrawalFunc error:", err);
+    try { alertError("Error opening withdrawal page."); } catch {}
   }
+}
+
+
+function getTotalWithdrawalAmt() {
+  const getuserinput = document.querySelectorAll('#address-keys')
+  let totalOutput = 0
+
+  for (let i = 0; i < getuserinput.length; i++) {
+    let amount = getuserinput[i].children[1].value
+    totalOutput += Number(amount)
+  }
+  return totalOutput
+}
 
 async function unspentApi(address) {
     if (address.currency === 'woodcoin') {
@@ -1015,7 +1268,7 @@ async function unspentApi(address) {
       }
     } else if (address.currency === 'litecoin') {
       try {
-        const apiUrl = `https://api.logbin.org/api/coin/utxo?address=${address.address}&currency="BTC"`
+        const apiUrl = `https://api.logbin.org/api/coin/utxo?address=${address.address}&currency="LTC"`
         const response = await fetch(apiUrl, {
           method: "GET",
         })
@@ -1714,24 +1967,31 @@ function verifyIfExists(ITEM, LIST) {
     return verification;
   }
 
-async function readdir(locFile) {
-    try {
-        let ret = await Filesystem.readdir({
-        path: 'fscb',
-        directory: Directory.Documents
-        });
-        if (verifyIfExists(locFile, ret.files)) {
-            return true
-        }
-        else {
-            // Do something else
-            return false
-        }
-    }
-    catch(e) {
-        console.log('Unable to read dir: ' + e);
-    }
+function hasNativeFilesystem() {
+  // Capacitor exposes these globals only in native builds
+  return (
+    typeof Filesystem !== "undefined" &&
+    typeof Directory !== "undefined" &&
+    typeof Filesystem.readdir === "function"
+  );
 }
+
+async function readdir(locFile) {
+  try {
+    if (!hasNativeFilesystem()) return false;
+
+    const ret = await Filesystem.readdir({
+      path: "fscb",
+      directory: Directory.Documents,
+    });
+
+    return verifyIfExists(locFile, ret.files);
+  } catch (e) {
+    console.log("Unable to read dir:", e);
+    return false;
+  }
+}
+
 
 
 /* generate contract id */
@@ -1811,51 +2071,109 @@ function addOrSign(options) {
 
 /* response banker signature */
 async function bankerSignatureResponse(message) {
-  const bankerCheckResult = await readdir('data.json');
-  const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
-  if (accounts) {
-    let accountID = message.id
-    let bankerID = message.banker_id
-    let next_banker
+  // NOTE: web build has no Filesystem; treat as optional
+  let bankerCheckResult = false;
+  try {
+    bankerCheckResult = await readdir("data.json");
+  } catch (_) {
+    bankerCheckResult = false;
+  }
+  console.log("banker check result: ", bankerCheckResult);
 
-		for (const [key, value] of Object.entries(accounts)) {
-      let account = value
-      if (account.id == accountID) {
-				for (const [index, withdrawal] of account.withdrawals.entries()){
-					if (withdrawal.id == message.withdrawal_id){
-			    	for (const [index, signature] of withdrawal.signatures.entries()) {
-              
-				      if(signature.banker_id == bankerID) {
-                
-				        signature.transaction_id = message.transaction_id
-				        signature.status = "SIGNED"
-				        const date_signed = new Date()
-				        signature.date_signed = date_signed
+  const accounts = localStorage.getItem("accounts")
+    ? JSON.parse(localStorage.getItem("accounts"))
+    : null;
+  if (!accounts) return;
 
-                localStorage.setItem("accounts", JSON.stringify(accounts))
-                const writeAccount = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null
-                
-                if (writeAccount) {
-                  // check number of signatures needed
-                  const signatures = withdrawal.signatures.filter(val => val.transaction_id != "");
-                  if (signatures.length == account.signature_nedded) {
-                    withdrawReadyToBroadcast(message)
-                  } else {
-                    let data = {
-                      "account": account,
-                      "message": message
-                    }
-                    responseBankerSignture(data)
-                  }
-                }
-				      }
-			    	}
-					}
-				}
-			}
-		}
+  const accountID = message.id;
+  const bankerID = message.banker_id;
+
+  for (const [key, account] of Object.entries(accounts)) {
+    if (account.id != accountID) continue;
+
+    for (const withdrawal of account.withdrawals || []) {
+      if (withdrawal.id != message.withdrawal_id) continue;
+
+      // 1) update the matching banker signature row
+      for (const sig of withdrawal.signatures || []) {
+        if (sig.banker_id != bankerID) continue;
+
+        sig.transaction_id = message.transaction_id; // signed tx hex from banker
+        sig.status = "SIGNED";
+        sig.date_signed = new Date();
+
+        // IMPORTANT: carry forward the latest partially signed tx
+        withdrawal.transaction_id_for_signature = message.transaction_id;
+        break;
+      }
+
+      // 2) persist
+      localStorage.setItem("accounts", JSON.stringify(accounts));
+
+      // 3) count signed (correct field name!)
+      const signedCount = (withdrawal.signatures || []).filter(
+        s => s.transaction_id && s.transaction_id !== ""
+      ).length;
+
+      const required = Number(account.signature_nedded);
+
+      if (signedCount >= required) {
+        // Broadcast the FINAL accumulated tx
+        withdrawReadyToBroadcast({
+          ...message,
+          transaction_id: withdrawal.transaction_id_for_signature
+        });
+      } else {
+        // Send next banker the UPDATED tx to sign-on-top-of
+        responseBankerSignture({
+          account,
+          message: {
+            ...message,
+            transaction_id_for_signature: withdrawal.transaction_id_for_signature
+          }
+        });
+      }
+
+      return;
+    }
   }
 }
+
+
+function recomputeWithdrawalFee() {
+  // API selected total
+  let apiTotal = 0;
+  document.querySelectorAll('#inner-unspent').forEach((r) => {
+    const cb = r.querySelector('input[type="checkbox"]');
+    const amtEl = r.querySelector('#amount-withdraw');
+    const v = Number(amtEl?.value || 0);
+    if (cb?.checked) apiTotal += v;
+  });
+
+  // Manual selected total
+  let manualTotal = 0;
+  const manualWrap = document.getElementById("manual-vins-rows");
+  if (manualWrap) {
+    manualWrap.querySelectorAll('[data-manual-vin-row="1"]').forEach((row) => {
+      const cb = row.querySelector('input[data-role="manual-check"]');
+      const amtEl = row.querySelector('input[data-role="manual-amount"]');
+      const amt = Number((amtEl?.value || "").trim());
+      if (cb?.checked && Number.isFinite(amt) && amt > 0) manualTotal += amt;
+    });
+  }
+
+  // Outputs total
+  const withdrawAmt = getTotalWithdrawalAmt();
+
+  unspentAmountTotal = apiTotal + manualTotal;
+  TOTAL_AMOUNT_TO_WITHDRAW = withdrawAmt;
+
+  if (typeof withdrawalFee !== "undefined" && withdrawalFee) {
+    withdrawalFee.value = (unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8);
+  }
+}
+
+
 
 /* show user transaction ready for broadcast */
 async function withdrawReadyToBroadcast(message) {
@@ -1865,24 +2183,27 @@ async function withdrawReadyToBroadcast(message) {
   let withdrawalTxId = document.getElementById('owner-withdrawal-txid-for-broadcast')
   withdrawalTxId.innerHTML = message.transaction_id
 
-  let broadcastButton = document.getElementById("owner-withdrawal-broadcast-button")
-  broadcastButton.addEventListener('click', () => {
-    withdrawalApi(message)
-  })
+  let broadcastButton = document.getElementById("owner-withdrawal-broadcast-button");
+  broadcastButton.replaceWith(broadcastButton.cloneNode(true));
+  broadcastButton = document.getElementById("owner-withdrawal-broadcast-button");
+  broadcastButton.addEventListener("click", () => withdrawalApi(message));
 
-  let closeButton = document.getElementById("owner-withdrawal-close-button")
-  closeButton.addEventListener('click', () => {
-    importArea.classList.remove('hidden')
-    ownerWithdrawalBroadcast.classList.add('hidden')
-    importText.value = ""
-    withdrawalTxId.innerHTML = ""
+  let closeButton = document.getElementById("owner-withdrawal-close-button");
+  closeButton.replaceWith(closeButton.cloneNode(true));
+  closeButton = document.getElementById("owner-withdrawal-close-button");
+  closeButton.addEventListener("click", () => {
+    importArea.classList.remove("hidden");
+    ownerWithdrawalBroadcast.classList.add("hidden");
+    importText.value = "";
+    withdrawalTxId.innerHTML = "";
+    showImportListScreen();
+  });
 
-    showImportListScreen()
-  })
 }
 
 /* broadcast transaction */
 async function withdrawalApi(message) {
+  console.log("withdrawal: ", message)
   const txid = message.transaction_id
 	const accountId = message.id
 	const withdrawalId = message.withdrawal_id
@@ -1938,66 +2259,58 @@ async function withdrawalApi(message) {
 	} else if (message.currency === "bitcoin" || message.currency === "litecoin") {
 		let chain = message.currency === "bitcoin" ? "BTC" : "LTC";
 		try {
-      const apiUrl = `https://api.logbin.org/api/coin/broadcast?txid=${txid}&currency=${chain}`
-      const response = await fetch(apiUrl, {
-        method: "GET"
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        return data
-      })
-      .catch(error => {
-        console.error('fetch Error:', error);
-      });
-      const resp = response.message
-      let body
-
-      if (resp.data) {
-        body = {
-          message: {
-            result: resp.data.hash
-          }
-        }
-      } else {
-        body = {
-          error : {
-            error: {
-              message: resp.error
-            }
-          }
-        }
+      const rawTxHex = (message.transaction_id || "").trim();
+      if (!rawTxHex) {
+        withdrawalBroadcastResponse({ error: { error: { message: "Missing raw transaction hex." } } });
+        return;
       }
-      if (body.message) {
-        
-        const accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null;
-        for (const [key, value] of Object.entries(accounts)) {
-          let account = value
-          if (account.id == accountId) {
-            for (const [index, withdrawal] of account.withdrawals.entries()){
-              if (withdrawal.id == withdrawalId){
-                
-                withdrawal.date_broadcasted = Date.now()
-                withdrawal.txid = resp.data.hash
-                
-                /**
-                 * Update the account record with the withdrawal txid
-                 */
-                localStorage.setItem("accounts", JSON.stringify(accounts))
-                
+
+      const apiUrl =
+        `https://api.logbin.org/api/coin/broadcast?txid=${encodeURIComponent(rawTxHex)}&currency=${encodeURIComponent(chain)}`;
+
+      // const apiUrl =
+      //   `http://localhost:3001/api/coin/broadcast?txid=${encodeURIComponent(rawTxHex)}&currency=${encodeURIComponent(chain)}`;
+
+      const res = await fetch(apiUrl, { method: "GET" });
+      const body = await res.json();
+      console.log("body: ", body)
+      const hash = body?.message?.hash;
+      console.log("hash: ", hash)
+
+      if (hash) {
+        const accounts = localStorage.getItem("accounts")
+          ? JSON.parse(localStorage.getItem("accounts"))
+          : null;
+
+        if (accounts) {
+          for (const account of Object.values(accounts)) {
+            if (String(account.id) === String(accountId)) {
+              for (const withdrawal of account.withdrawals || []) {
+                if (String(withdrawal.id) === String(withdrawalId)) {
+                  withdrawal.date_broadcasted = Date.now();
+                  withdrawal.txid = hash;
+                }
               }
             }
           }
+          localStorage.setItem("accounts", JSON.stringify(accounts));
         }
-        withdrawalBroadcastResponse(body)
+
+        withdrawalBroadcastResponse({ message: { result: hash }, raw: body });
+        return;
       }
-	  } catch(e) {
-      withdrawalBroadcastResponse(e.response)
-	  }
+
+      // If no hash, treat as error
+      const errMsg =
+        body?.error?.message ||
+        body?.message ||
+        body?.message?.error?.message ||
+        "Broadcast failed (no tx hash returned).";
+
+      withdrawalBroadcastResponse({ error: { error: { message: errMsg } }, raw: body });
+    } catch (e) {
+      withdrawalBroadcastResponse({ error: { error: { message: String(e) } } });
+    }
 	} else {
 		console.log("invalid currency")
 		return
@@ -2273,6 +2586,7 @@ async function bankerSignatureRequest (message) {
   const tx = coin_js.transaction()
   const deserializeTx = tx.deserialize(message.transaction_id_for_signature)
 
+
   let inputs = deserializeTx.ins
   let outputs = deserializeTx.outs
 
@@ -2409,6 +2723,11 @@ function bankerSignTransaction(message, privkey) {
 
   const scriptToSign = tx.deserialize(message.transaction_id_for_signature)
   const signedTX = scriptToSign.sign(privkey, 1)
+
+  console.log("SIGNED TX:", signedTX);
+  const looksSigned = /(?:4730|4830|4930|4a30)/i.test(signedTX);
+  console.log("looksSigned:", looksSigned);
+  console.log("SIGNED TX contains DER sig marker 30?:", signedTX.includes("30"));
 
   bankerVerifyWithdrawal.classList.add('hidden')
   bankerMessageSignTx.classList.remove('hidden')
@@ -2667,15 +2986,21 @@ async function bankerPubkeyResponse(evt) {
 
 /* Create contract */
 async function saveAndCreateText(e) {
+    console.log("save and create text function")
+    console.log("selected currency: ", currency.value)
     e.preventDefault();
     
     const contractSendName = removeTagsFromInput(contractName.value);
     const creatorSendName = USER.user_name;
     const creatorSendEmail = USER.user_email;
 
-    const sigSendNumber = sigNumber.options[sigNumber.selectedIndex].text;
-    const coinCurrencySend = currency.options[currency.selectedIndex].text;
+    // const sigSendNumber = sigNumber.options[sigNumber.selectedIndex].text;
+    // const coinCurrencySend = currency.options[currency.selectedIndex].text;
+    const sigSendNumber = Number(sigNumber.value);
+    const coinCurrencySend = currency.value;
     const innerMultiKey = document.querySelectorAll('.activeClass a')
+
+    console.log("coinCurrencySend: ", coinCurrencySend)
 
 
 
@@ -2708,6 +3033,13 @@ async function saveAndCreateText(e) {
         bankersMerge.push(innerMultiKey[i].dataset.value)
     }
 
+
+    console.log("coin_js selected:", coinCurrencySend);
+    console.log("coin_js.pub:", coin_js.pub);
+    console.log("coin_js.priv:", coin_js.priv);
+    console.log("coin_js.multisig:", coin_js.multisig);
+    console.log("coin_js.script:", coin_js.script);
+    console.log("coin_js.bech32:", coin_js.bech32);
 
     const keys = bankersMerge;
     const multisig =  coin_js.pubkeys2MultisigAddress(keys, sigSendNumber);
@@ -2975,36 +3307,16 @@ async function contractnew (options) {
 
   function amountOnInput(amount) {
     if (!isNaN(amount)) {
-      const getuserinput = document.querySelectorAll('#address-keys')
-      let totalOutput = 0
-
-      for (let i = 0; i < getuserinput.length; i++) {
-        let amount = getuserinput[i].children[1].value
-        totalOutput += Number(amount)
-      }
-      TOTAL_AMOUNT_TO_WITHDRAW = totalOutput
-      withdrawalFee.value = (unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8)
+      recomputeWithdrawalFee()
     }
   }
 
   function amountOnchange(amount) {
-    const getuserinput = document.querySelectorAll('#address-keys')
-    let totalOutput = 0
-
-    for (let i = 0; i < getuserinput.length; i++) {
-      let amount = getuserinput[i].children[1].value
-      totalOutput += Number(amount)
-    }
-
-    //TOTAL_AMOUNT_TO_WITHDRAW += Number(amount)
-    TOTAL_AMOUNT_TO_WITHDRAW = totalOutput
-    withdrawalFee.value = (unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8)
+    recomputeWithdrawalFee()
   }
 
   function amountOnchangeSubtract(amount) {
-
-    TOTAL_AMOUNT_TO_WITHDRAW -= Number(amount)
-    withdrawalFee.value = (unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8)
+    recomputeWithdrawalFee()
   }
 
   let withdrawAmountInput = document.getElementById('withdraw-amount')
@@ -3012,18 +3324,21 @@ async function contractnew (options) {
   withdrawAmountInput.addEventListener('change', () => {amountOnchange(withdrawAmountInput.value)})
 
   function checkTxFee(e) {
+    console.log("check tx fee function")
     e.preventDefault()
     let withdrawFeeInput = document.getElementById("withdraw-fee")
-    let userInputtedFee = withdrawFeeInput.value
+    let userInputtedFee = Number(withdrawFeeInput.value || 0)
 
-    let change = (unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8)
+    let change = Number((unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8))
 
     if (unspentAmountTotal < TOTAL_AMOUNT_TO_WITHDRAW) {
+      console.log("Insufficient balance. Please adjust the withdrawal amount.")
       alertError("Insufficient balance. Please adjust the withdrawal amount.")
       return
     }
 
     if (userInputtedFee == change) {
+      console.log("userInputtedFee == change")
       if (change > 0.001) {
         let text = "Current transaction fee is high. If you want to proceed, click Ok";
         if (confirm(text) == true) {
@@ -3044,191 +3359,202 @@ async function contractnew (options) {
   }
 
   async function generateClaim(changeAmount) {
-    let coin_js
-    if (ACCOUNT_CURRENCY === "woodcoin") {
-      coin_js = coinjs
-    } else if (ACCOUNT_CURRENCY === "bitcoin") {
-      coin_js = bitcoinjs
-    } else if (ACCOUNT_CURRENCY === "litecoin") {
-      coin_js = litecoinjs
-    } else {
-      console.log("invalid currency")
-      return
+    let coin_js;
+    if (ACCOUNT_CURRENCY === "woodcoin") coin_js = coinjs;
+    else if (ACCOUNT_CURRENCY === "bitcoin") coin_js = bitcoinjs;
+    else if (ACCOUNT_CURRENCY === "litecoin") coin_js = litecoinjs;
+    else return alertError("Invalid currency");
+
+    const tx = coin_js.transaction();
+
+    const utxoRows = document.querySelectorAll('#inner-unspent');
+    const outRows  = document.querySelectorAll('#address-keys');
+
+    const manualRowsWrap = document.getElementById("manual-vins-rows");
+    const manualRows = manualRowsWrap
+      ? manualRowsWrap.querySelectorAll('[data-manual-vin-row="1"]')
+      : [];
+
+    const inputsTable  = document.getElementById('banker-verify-inputs-initial');
+    const outputsTable = document.getElementById('banker-verify-outputs-initial');
+    if (inputsTable) inputsTable.innerHTML = "";
+    if (outputsTable) outputsTable.innerHTML = "";
+
+    // ---- add inputs (API UTXOs) ----
+    let selectedInputs = 0;
+
+    utxoRows.forEach((row) => {
+      const cb = row.querySelector('input[type="checkbox"]');
+      if (!cb || !cb.checked) return;
+
+      const txidEl   = row.querySelector('#txid-withdraw');
+      const voutEl   = row.querySelector('#vout-withdraw');
+      const scriptEl = row.querySelector('#script-withdraw');
+
+      const txid  = (txidEl?.value || "").trim();
+      const vout  = Number((voutEl?.value || "").trim());
+      const script = (scriptEl?.value || "").trim();
+
+      if (!txid || !Number.isFinite(vout) || !script) return;
+
+      tx.addinput(txid, vout, script, null);
+      selectedInputs++;
+    });
+
+    // ---- add inputs (Manual V-Ins) ----
+    // NOTE: your manual UI only collects txid + amount.
+    manualRows.forEach((row) => {
+      const cb = row.querySelector('input[data-role="manual-check"]');
+      if (!cb || !cb.checked) return;
+
+      const txidEl = row.querySelector('input[data-role="manual-txid"]');
+      const voutEl = row.querySelector('input[data-role="manual-vout"]');
+      const scrEl  = row.querySelector('input[data-role="manual-script"]');
+
+      const txid = (txidEl?.value || "").trim();
+      const voutStr = (voutEl?.value || "").trim();
+      const script = (scrEl?.value || "").trim();
+
+      const vout = Number(voutStr);
+
+      if (!txid) return alertError("Manual v-in missing txid.");
+      if (!Number.isInteger(vout) || vout < 0) return alertError("Manual v-in has invalid vout.");
+      if (!script) return alertError("Manual v-in missing script.");
+
+      tx.addinput(txid, vout, script, null);
+      selectedInputs++;
+    });
+
+    if (selectedInputs === 0) {
+      alertError("Please select atleast one input (utxo).");
+      return;
     }
 
-    let tx = coin_js.transaction()
-    const getunspent = document.querySelectorAll('#inner-unspent')
-    const getuserinput = document.querySelectorAll('#address-keys')
-    let userunspentindex;
-    let userinputindex;
-    let unspentindexsum = 0;
-    let userinputsum = 0 ;
-    let txRedeemTransaction;
-    let accountSigFilter;
-    let inputsTable = document.getElementById('banker-verify-inputs-initial')
-    let outputsTable = document.getElementById('banker-verify-outputs-initial')
+    // ---- add outputs ----
+    for (let i = 0; i < outRows.length; i++) {
+      const address = (outRows[i].children[0]?.value || "").trim();
+      const amount  = Number((outRows[i].children[1]?.value || "").trim());
 
-    inputsTable.innerHTML = ""
-    outputsTable.innerHTML = ""
-    for(let i = 0; i < getunspent.length; i++) {
-      if(getunspent[i].children[5].defaultChecked) {
-        userunspentindex = i
-        unspentindexsum += Number(getunspent[i].children[3].value)
-        tx.addinput(getunspent[i].children[0].value, getunspent[i].children[1].value, getunspent[i].children[2].value, null)
+      if (!address || !Number.isFinite(amount) || amount <= 0) continue;
+
+      const isValid = coin_js.addressDecode(address);
+      if (!isValid) {
+        alertError("Address is not valid for " + ACCOUNT_CURRENCY);
+        return;
       }
+
+      tx.addoutput(address, amount);
     }
-    
-    for (let i = 0; i < getuserinput.length; i++) {
-      let address = getuserinput[i].children[0].value
-      let amount = getuserinput[i].children[1].value
 
-      userinputindex = i
-      userinputsum += Number(amount)
+    // ---- optional change output ----
+    if (changeAmount && Number(changeAmount) > 0) {
+      tx.addoutput(CHANGE_ADDRESS, Number(changeAmount));
+    }
 
-      let isValidAddress = coinjs.addressDecode(address)
-      if (isValidAddress == false) {
-        alertError("Address is not valid")
-        return
+    // ---- serialize TX for signing ----
+    const txRedeemTransaction = tx.serialize();
+
+    // ---- signing filter redeemscript (robust) ----
+    const signerRedeemScript = (window.CURRENT_REDEEMSCRIPT || "").trim();
+    if (!signerRedeemScript) {
+      alertError("Missing redeem script for signing. (Set CURRENT_REDEEMSCRIPT in accountWithdrawalFunc)");
+      return;
+    }
+
+    const sigScript = { script: signerRedeemScript };
+    const accountSigFilter = await getredeemscriptRedeemscript(sigScript);
+
+    // Switch screens
+    const accountDetails = document.getElementById('account-details');
+    const accountWithdrawal = document.getElementById('account-withdrawal');
+    const accountActions = document.getElementById('account-actions');
+    const withdrawalReference = document.getElementById('withdraw-reference');
+
+    accountDetails?.classList.add('hidden');
+    accountWithdrawal?.classList.add('hidden');
+    accountActions?.classList.add('hidden');
+    withdrawalReference?.classList.remove('hidden');
+
+    // Populate preview tables
+    const deserializeTx = tx.deserialize(txRedeemTransaction);
+
+    // Inputs preview
+    deserializeTx.ins.forEach((input, idx) => {
+      const s = deserializeTx.extractScriptKey(idx);
+
+      const div = document.createElement('div');
+      div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black');
+
+      const a = document.createElement('input');
+      a.readOnly = true;
+      a.className = 'col-span-3 txid-withdraw p-1 text-sm text-normal';
+      a.value = input.outpoint.hash;
+
+      const b = document.createElement('input');
+      b.readOnly = true;
+      b.className = 'col-span-1 text-center';
+      b.value = input.outpoint.index;
+
+      const c = document.createElement('input');
+      c.readOnly = true;
+      c.className = 'col-span-3 bg-gray-300 p1 text-sm text-normal';
+      c.value = s.script;
+
+      div.appendChild(a); div.appendChild(b); div.appendChild(c);
+      inputsTable?.appendChild(div);
+    });
+
+    // Outputs preview (use coin_js)
+    deserializeTx.outs.forEach((output) => {
+      let addr = '';
+      if (output.script.chunks.length == 5) {
+        addr = coin_js.scripthash2address(Crypto.util.bytesToHex(output.script.chunks[2]));
+      } else if ((output.script.chunks.length == 2) && output.script.chunks[0] == 0) {
+        addr = coin_js.bech32_encode(
+          coin_js.bech32.hrp,
+          [coin_js.bech32.version].concat(coin_js.bech32_convert(output.script.chunks[1], 8, 5, true))
+        );
       } else {
-        tx.addoutput(address, amount)
+        const pub = coin_js.pub;
+        coin_js.pub = coin_js.multisig;
+        addr = coin_js.scripthash2address(Crypto.util.bytesToHex(output.script.chunks[1]));
+        coin_js.pub = pub;
       }
+
+      const div = document.createElement('div');
+      div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black');
+
+      const o1 = document.createElement('input');
+      o1.readOnly = true;
+      o1.className = 'col-span-3 txid-withdraw p-1 text-sm text-normal';
+      o1.value = addr;
+
+      const o2 = document.createElement('input');
+      o2.readOnly = true;
+      o2.className = 'col-span-1 text-sm text-center';
+      o2.value = (output.value / 100000000).toFixed(8);
+
+      const o3 = document.createElement('input');
+      o3.readOnly = true;
+      o3.className = 'col-span-3 bg-gray-300 p1 text-sm text-normal';
+      o3.value = Crypto.util.bytesToHex(output.script.buffer);
+
+      div.appendChild(o1); div.appendChild(o2); div.appendChild(o3);
+      outputsTable?.appendChild(div);
+    });
+
+    // Avoid stacking click handlers
+    const btn = document.getElementById('generate-request-signature-message');
+    if (btn) {
+      btn.replaceWith(btn.cloneNode(true));
+      const freshBtn = document.getElementById('generate-request-signature-message');
+      freshBtn?.addEventListener('click', () => {
+        selectBankerToSign(txRedeemTransaction, accountSigFilter);
+      }, false);
     }
-
-    /**
-      Disabled automatic addition of change address
-    **/
-    if (changeAmount) {
-      tx.addoutput(CHANGE_ADDRESS, changeAmount)
-    }
-    /**End of automatically adding change address**/
-
-    if (userunspentindex === getunspent.length -1 && userinputindex === getuserinput.length -1) {
-      let accountDetails = document.getElementById('account-details')
-      let accountWithdrawal = document.getElementById('account-withdrawal')
-      let accountActions = document.getElementById('account-actions')
-      let withdrawalReference = document.getElementById('withdraw-reference')
-      accountDetails.classList.add('hidden')
-      accountWithdrawal.classList.add('hidden')
-      accountActions.classList.add('hidden')
-      withdrawalReference.classList.remove('hidden')
-      txRedeemTransaction = tx.serialize();
-      const sigScript = {
-        "script": getunspent[0].children[4].value
-      }
-      accountSigFilter = await getredeemscriptRedeemscript(sigScript)
-      const deserializeTx = tx.deserialize(tx.serialize())
-      
-      let inputs = deserializeTx.ins
-      let outputs = deserializeTx.outs
-
-      for (let i = 0; i < inputs.length; i++) {
-        var s = deserializeTx.extractScriptKey(i);
-        let input = inputs[i]
-
-        let div = document.createElement('div')
-        div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
-        let inputs1 = document.createElement('input')
-        inputs1.setAttribute('readonly', true)
-        inputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
-        inputs1.value = input.outpoint.hash
-        
-        let inputs2 = document.createElement('input')
-        inputs2.setAttribute('readonly', true)
-        inputs2.setAttribute('class', 'col-span-1 text-center');
-        inputs2.value = input.outpoint.index
-        
-        let inputs3 = document.createElement('input')
-        inputs3.setAttribute('readonly', true)
-        inputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
-        inputs3.value = s.script
-        
-        div.appendChild(inputs1)
-        div.appendChild(inputs2)
-        div.appendChild(inputs3)
-
-        inputsTable.appendChild(div)
-      }
-
-      for (let i = 0; i < outputs.length; i++) {
-
-        let output = outputs[i]
-        if(output.script.chunks.length==2 && output.script.chunks[0]==106){ // OP_RETURN
-
-          var data = Crypto.util.bytesToHex(output.script.chunks[1]);
-          var dataascii = hex2ascii(data);
-
-          if(dataascii.match(/^[\s\d\w]+$/ig)){
-            data = dataascii;
-          }
-
-          let div = document.createElement('div')
-          div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
-          let inputs1 = document.createElement('input')
-          inputs1.setAttribute('readonly', true)
-          inputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
-          inputs1.value = data
-          
-          let inputs2 = document.createElement('input')
-          inputs2.setAttribute('readonly', true)
-          inputs2.setAttribute('class', 'col-span-1 text-sm text-center');
-          inputs2.value = (output.value/100000000).toFixed(8)
-          
-          let inputs3 = document.createElement('input')
-          inputs3.setAttribute('readonly', true)
-          inputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
-          inputs3.value = Crypto.util.bytesToHex(output.script.buffer)
-          
-          div.appendChild(inputs1)
-          div.appendChild(inputs2)
-          div.appendChild(inputs3)
-
-          inputsTable.appendChild(div)
-        } else {
-
-          var addr = '';
-          if(output.script.chunks.length==5){
-            addr = coinjs.scripthash2address(Crypto.util.bytesToHex(output.script.chunks[2]));
-          } else if((output.script.chunks.length==2) && output.script.chunks[0]==0){
-            addr = coinjs.bech32_encode(coinjs.bech32.hrp, [coinjs.bech32.version].concat(coinjs.bech32_convert(output.script.chunks[1], 8, 5, true)));
-          } else {
-            var pub = coinjs.pub;
-            coinjs.pub = coinjs.multisig;
-            addr = coinjs.scripthash2address(Crypto.util.bytesToHex(output.script.chunks[1]));
-            coinjs.pub = pub;
-          }
-
-          let div = document.createElement('div')
-          div.setAttribute('class', 'grid grid-cols-7 gap-3 text-black')
-          let inputs1 = document.createElement('input')
-          inputs1.setAttribute('readonly', true)
-          inputs1.setAttribute('class', 'col-span-3 txid-withdraw p-1 text-sm text-normal')
-          inputs1.value = addr
-          
-          let inputs2 = document.createElement('input')
-          inputs2.setAttribute('readonly', true)
-          inputs2.setAttribute('class', 'col-span-1 text-sm text-center');
-          inputs2.value = (output.value/100000000).toFixed(8)
-          
-          let inputs3 = document.createElement('input')
-          inputs3.setAttribute('readonly', true)
-          inputs3.setAttribute('class', 'col-span-3 bg-gray-300 p1 text-sm text-normal');
-          inputs3.value = Crypto.util.bytesToHex(output.script.buffer)
-          
-          div.appendChild(inputs1)
-          div.appendChild(inputs2)
-          div.appendChild(inputs3)
-
-          outputsTable.appendChild(div)
-        }
-      }
-
-      const generateButton = document.getElementById('generate-request-signature-message')
-      generateButton.addEventListener('click', function() {
-        selectBankerToSign(txRedeemTransaction, accountSigFilter)
-      }, false)
-    }
-
   }
+
+
 
   function selectBankerToSign(tx, account, withdrawalID=null) {
 
@@ -3544,6 +3870,475 @@ function importData(data) {
   const textarea = document.getElementById('import-text');
   textarea.innerHTML = ""
 }
+
+// -------------------------
+// TX BUILDER (separate screen)
+// -------------------------
+const TX_BUILDER = {
+  apiUtxos: [],
+  currentRedeemScript: "",
+};
+
+function showTxBuilderScreen() {
+  // hide your other screens here if needed
+  document.getElementById("txbuilder")?.classList.remove("hidden");
+  renderTxTabs();
+  wireTxBuilderHandlers();
+
+  // start with one output row (like coinb.in)
+  const outputsWrap = document.getElementById("tx-outputs");
+  if (outputsWrap && outputsWrap.children.length === 0) addOutputRow();
+
+  // start with 0 manual rows; user adds as needed
+  renderApiUtxos(TX_BUILDER.apiUtxos);
+  recalcTxTotals();
+}
+
+// -------------------------
+// 1) renderTxTabs() (tab switcher)
+// -------------------------
+function renderTxTabs() {
+  const tabCreate = document.getElementById("tx-tab-create");
+  const tabBroadcast = document.getElementById("tx-tab-broadcast");
+  const viewCreate = document.getElementById("tx-create-view");
+  const viewBroadcast = document.getElementById("tx-broadcast-view");
+
+  function setActive(which) {
+    if (which === "create") {
+      viewCreate?.classList.remove("hidden");
+      viewBroadcast?.classList.add("hidden");
+
+      tabCreate.className = "px-4 py-2 rounded bg-orange-500 text-white";
+      tabBroadcast.className = "px-4 py-2 rounded bg-white text-gray-600 border";
+    } else {
+      viewBroadcast?.classList.remove("hidden");
+      viewCreate?.classList.add("hidden");
+
+      tabBroadcast.className = "px-4 py-2 rounded bg-orange-500 text-white";
+      tabCreate.className = "px-4 py-2 rounded bg-white text-gray-600 border";
+    }
+  }
+
+  tabCreate.onclick = () => setActive("create");
+  tabBroadcast.onclick = () => setActive("broadcast");
+
+  setActive("create");
+}
+
+// -------------------------
+// UI row helpers
+// -------------------------
+function renderApiUtxos(utxos) {
+  const wrap = document.getElementById("tx-api-utxos");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+
+  utxos.forEach((u, idx) => {
+    const row = document.createElement("div");
+    row.className = "grid grid-cols-4 gap-3 items-center";
+    if (idx > 0) row.style.marginTop = "0.75em";
+
+    // txid (col-2)
+    const txid = document.createElement("input");
+    txid.className = "col-span-2 txid-withdraw text-black text-sm md:text-base text-normal p-1";
+    txid.readOnly = true;
+    txid.value = u.txid || "";
+
+    // vout (hidden but present)
+    const vout = document.createElement("input");
+    vout.type = "text";
+    vout.className = "hidden";
+    vout.value = String(u.vout ?? 0);
+
+    // script (hidden)
+    const scr = document.createElement("input");
+    scr.type = "text";
+    scr.className = "hidden";
+    scr.value = u.script || "";
+
+    // amount (col-1)
+    const amt = document.createElement("input");
+    amt.className = "col-span-1 text-black text-sm md:text-base text-normal p-1";
+    amt.readOnly = true;
+    amt.value = String(u.amount ?? 0);
+
+    // actions (checkbox)
+    const actions = document.createElement("div");
+    actions.className = "col-span-1 flex justify-end items-center";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = true;
+    cb.style.width = "18px";
+    cb.style.height = "18px";
+
+    cb.addEventListener("change", recalcTxTotals);
+
+    actions.appendChild(cb);
+
+    // tags for buildTxFromUI
+    row.dataset.role = "api-utxo";
+    row.appendChild(txid);
+    row.appendChild(vout);
+    row.appendChild(scr);
+    row.appendChild(amt);
+    row.appendChild(actions);
+
+    wrap.appendChild(row);
+  });
+
+  recalcTxTotals();
+}
+
+function addTxBuilderManualVinRow() {
+  const row = document.createElement("div");
+  row.dataset.manualVinRow = "1";
+  row.className = "grid grid-cols-12 gap-3 items-center";
+
+  // spacing between rows
+  if (manualRows.children.length > 0) row.style.marginTop = "0.75em";
+
+  // txid
+  const txid = document.createElement("input");
+  txid.type = "text";
+  txid.placeholder = "txid";
+  txid.className =
+    "col-span-5 txid-withdraw text-black text-sm md:text-base text-normal p-1";
+  txid.setAttribute("data-role", "manual-txid");
+
+  // vout (VISIBLE)
+  const vout = document.createElement("input");
+  vout.type = "number";
+  vout.min = "0";
+  vout.step = "1";
+  vout.placeholder = "vout";
+  vout.className =
+    "col-span-1 text-black text-sm md:text-base text-normal p-1";
+  vout.setAttribute("data-role", "manual-vout");
+  vout.value = "0";
+
+  // script (VISIBLE)
+  const scr = document.createElement("input");
+  scr.type = "text";
+  scr.placeholder = "script (redeemscript / prevout script)";
+  scr.className =
+    "col-span-4 text-black text-sm md:text-base text-normal p-1";
+  scr.setAttribute("data-role", "manual-script");
+  scr.value = "";
+
+  // amount
+  const amount = document.createElement("input");
+  amount.type = "number";
+  amount.step = "0.00000001";
+  amount.min = "0";
+  amount.placeholder = "amount";
+  amount.className =
+    "col-span-1 text-black text-sm md:text-base text-normal p-1";
+  amount.setAttribute("data-role", "manual-amount");
+
+  // checkbox
+  const cb = document.createElement("input");
+  cb.type = "checkbox";
+  cb.checked = true;
+  cb.setAttribute("data-role", "manual-check");
+  cb.style.transform = "scale(1.3)";
+  cb.style.transformOrigin = "center";
+
+  // remove button
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.innerHTML = "🗑️";
+  removeBtn.title = "Remove manual v-in";
+  removeBtn.className = "px-2 py-1 rounded hover:bg-gray-200 text-gray-600";
+
+  removeBtn.addEventListener("click", () => {
+    row.remove();
+    refreshWithdrawalFee(manualRows);
+  });
+
+  cb.addEventListener("change", () => refreshWithdrawalFee(manualRows));
+  amount.addEventListener("input", () => refreshWithdrawalFee(manualRows));
+
+  const actions = document.createElement("div");
+  actions.className = "col-span-1 flex justify-end items-center gap-2";
+  actions.appendChild(cb);
+  actions.appendChild(removeBtn);
+
+  row.appendChild(txid);
+  row.appendChild(vout);
+  row.appendChild(scr);
+  row.appendChild(amount);
+  row.appendChild(actions);
+
+  manualRows.appendChild(row);
+  refreshWithdrawalFee(manualRows);
+}
+
+
+function addOutputRow() {
+  const wrap = document.getElementById("tx-outputs");
+  if (!wrap) return;
+
+  const row = document.createElement("div");
+  row.className = "grid grid-cols-4 gap-3 items-center";
+  if (wrap.children.length > 0) row.style.marginTop = "0.75em";
+
+  const addr = document.createElement("input");
+  addr.type = "text";
+  addr.placeholder = "address";
+  addr.className = "col-span-3 text-black text-sm md:text-base text-normal p-1 border rounded";
+  addr.addEventListener("input", recalcTxTotals);
+
+  const amount = document.createElement("input");
+  amount.type = "number";
+  amount.step = "0.00000001";
+  amount.min = "0";
+  amount.placeholder = "amount";
+  amount.className = "col-span-1 text-black text-sm md:text-base text-normal p-1 border rounded";
+  amount.addEventListener("input", recalcTxTotals);
+
+  wrap.appendChild(row);
+  row.appendChild(addr);
+  row.appendChild(amount);
+
+  recalcTxTotals();
+}
+
+// -------------------------
+// Totals / fee calc (UI-only estimate)
+// -------------------------
+function recalcTxTotals() {
+  const totalInEl = document.getElementById("tx-total-in");
+  const totalOutEl = document.getElementById("tx-total-out");
+  const feeEl = document.getElementById("tx-fee");
+
+  let totalIn = 0;
+  let totalOut = 0;
+
+  // API UTXOs
+  document.querySelectorAll('#tx-api-utxos [data-role="api-utxo"]').forEach((row) => {
+    const cb = row.querySelector('input[type="checkbox"]');
+    if (!cb || !cb.checked) return;
+    const amtEl = row.querySelectorAll("input")[3];
+    const v = Number(amtEl?.value || 0);
+    if (Number.isFinite(v)) totalIn += v;
+  });
+
+  // Manual V-Ins (amount is estimate only)
+  const manualWrap = document.getElementById("tx-manual-rows");
+  if (manualWrap) {
+    manualWrap.querySelectorAll('[data-manual-vin-row="1"]').forEach((row) => {
+      const cb = row.querySelector('input[data-role="manual-check"]');
+      if (!cb || !cb.checked) return;
+      const amtEl = row.querySelector('input[data-role="manual-amount"]');
+      const v = Number(amtEl?.value || 0);
+      if (Number.isFinite(v)) totalIn += v;
+    });
+  }
+
+  // Outputs
+  const outWrap = document.getElementById("tx-outputs");
+  if (outWrap) {
+    Array.from(outWrap.children).forEach((row) => {
+      const addr = row.children[0]?.value?.trim();
+      const amt = Number(row.children[1]?.value || 0);
+      if (addr && Number.isFinite(amt) && amt > 0) totalOut += amt;
+    });
+  }
+
+  const fee = totalIn - totalOut;
+
+  if (totalInEl) totalInEl.textContent = totalIn.toFixed(8);
+  if (totalOutEl) totalOutEl.textContent = totalOut.toFixed(8);
+  if (feeEl) feeEl.textContent = (Number.isFinite(fee) ? fee : 0).toFixed(8);
+}
+
+// -------------------------
+// 2) buildTxFromUI() (collect API + manual vins + outputs)
+// -------------------------
+function buildTxFromUI() {
+  const currency = document.getElementById("tx-currency")?.value || "bitcoin";
+
+  let coin_js;
+  if (currency === "bitcoin") coin_js = bitcoinjs;
+  else if (currency === "litecoin") coin_js = litecoinjs;
+  else throw new Error("Invalid currency: " + currency);
+
+  const tx = coin_js.transaction();
+
+  // ---- Inputs: API UTXOs ----
+  document.querySelectorAll('#tx-api-utxos [data-role="api-utxo"]').forEach((row) => {
+    const cb = row.querySelector('input[type="checkbox"]');
+    if (!cb || !cb.checked) return;
+
+    const txid = row.children[0]?.value?.trim();
+    const vout = Number(row.children[1]?.value || "0");
+    const script = row.children[2]?.value?.trim(); 
+
+    if (!txid || !Number.isFinite(vout) || !script) return;
+    tx.addinput(txid, vout, script, null);
+  });
+
+  // ---- Inputs: Manual V-Ins ----
+  const manualWrap = document.getElementById("tx-manual-rows");
+  if (manualWrap) {
+    manualWrap.querySelectorAll('[data-manual-vin-row="1"]').forEach((row) => {
+      const cb = row.querySelector('input[data-role="manual-check"]');
+      if (!cb || !cb.checked) return;
+
+      const txid = row.querySelector('input[data-role="manual-txid"]')?.value?.trim();
+      const vout = Number(row.querySelector('input[data-role="manual-vout"]')?.value || "0");
+
+      let script = row.querySelector('input[data-role="manual-script"]')?.value?.trim();
+      if (!script) script = (TX_BUILDER.currentRedeemScript || "").trim();
+
+      if (!txid || !Number.isFinite(vout) || !script) return;
+      tx.addinput(txid, vout, script, null);
+    });
+  }
+
+  // require at least 1 input
+  if (!tx.ins || tx.ins.length === 0) {
+    throw new Error("Please select at least one input (V-IN).");
+  }
+
+  // ---- Outputs ----
+  const outWrap = document.getElementById("tx-outputs");
+  if (!outWrap) throw new Error("Missing outputs container.");
+
+  Array.from(outWrap.children).forEach((row) => {
+    const address = row.children[0]?.value?.trim();
+    const amount = Number(row.children[1]?.value || 0);
+    if (!address || !Number.isFinite(amount) || amount <= 0) return;
+
+    const isValid = coin_js.addressDecode(address);
+    if (!isValid) throw new Error("Invalid address for " + currency + ": " + address);
+
+    tx.addoutput(address, amount);
+  });
+
+  return { currency, coin_js, tx };
+}
+
+// -------------------------
+// 3) createTx() (serialize + show textarea)
+// -------------------------
+function createTx() {
+  const errEl = document.getElementById("tx-create-error");
+  if (errEl) errEl.classList.add("hidden");
+
+  try {
+    const { tx } = buildTxFromUI();
+    const hex = tx.serialize();
+
+    const hexBox = document.getElementById("tx-hex");
+    if (hexBox) hexBox.value = hex;
+
+    const bhex = document.getElementById("tx-broadcast-hex");
+    if (bhex && !bhex.value.trim()) bhex.value = hex;
+
+    return hex;
+  } catch (e) {
+    if (errEl) {
+      errEl.textContent = String(e.message || e);
+      errEl.classList.remove("hidden");
+    }
+    console.error(e);
+  }
+}
+
+// -------------------------
+// 4) broadcastTx()
+// -------------------------
+async function broadcastTx() {
+  const resultEl = document.getElementById("tx-broadcast-result");
+  if (resultEl) {
+    resultEl.classList.add("hidden");
+    resultEl.textContent = "";
+    resultEl.className = "mt-3 text-sm hidden";
+  }
+
+  const currency = document.getElementById("tx-broadcast-currency")?.value || "bitcoin";
+  const chain = currency === "bitcoin" ? "BTC" : "LTC";
+
+  const rawTxHex = document.getElementById("tx-broadcast-hex")?.value?.trim();
+  if (!rawTxHex) {
+    if (resultEl) {
+      resultEl.textContent = "Please paste signed tx hex.";
+      resultEl.className = "mt-3 text-sm text-red-600";
+      resultEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  try {
+    const apiUrl =
+      `https://api.logbin.org/api/broadcast/r?transaction=${encodeURIComponent(rawTxHex)}&currency=${encodeURIComponent(chain)}`;
+
+    const res = await fetch(apiUrl, { method: "GET" });
+    const body = await res.json();
+
+    const txid = body?.message?.result;
+
+    if (txid) {
+      if (resultEl) {
+        resultEl.textContent = `Broadcasted! TXID: ${txid}`;
+        resultEl.className = "mt-3 text-sm text-green-700";
+        resultEl.classList.remove("hidden");
+      }
+    } else {
+      const errMsg =
+        body?.error?.error?.message ||
+        body?.message ||
+        "Broadcast failed.";
+      if (resultEl) {
+        resultEl.textContent = String(errMsg);
+        resultEl.className = "mt-3 text-sm text-red-600";
+        resultEl.classList.remove("hidden");
+      }
+    }
+
+    return body;
+  } catch (e) {
+    console.error(e);
+    if (resultEl) {
+      resultEl.textContent = "Broadcast error: " + String(e.message || e);
+      resultEl.className = "mt-3 text-sm text-red-600";
+      resultEl.classList.remove("hidden");
+    }
+  }
+}
+
+// -------------------------
+// Wire UI buttons
+// -------------------------
+function wireTxBuilderHandlers() {
+  const addManualBtn = document.getElementById("tx-add-manual");
+  const addOutBtn = document.getElementById("tx-add-output");
+  const createBtn = document.getElementById("tx-create-btn");
+  const copyBtn = document.getElementById("tx-copy-btn");
+  const bcastBtn = document.getElementById("tx-broadcast-btn");
+
+  if (addManualBtn) addManualBtn.onclick = addTxBuilderManualVinRow;
+  if (addOutBtn) addOutBtn.onclick = addOutputRow;
+  if (createBtn) createBtn.onclick = createTx;
+
+  if (copyBtn) {
+    copyBtn.onclick = async () => {
+      const t = document.getElementById("tx-hex")?.value || "";
+      if (!t.trim()) return;
+      try {
+        await navigator.clipboard.writeText(t);
+      } catch {}
+    };
+  }
+
+  if (bcastBtn) bcastBtn.onclick = broadcastTx;
+
+  const cur = document.getElementById("tx-currency");
+  if (cur) cur.onchange = recalcTxTotals;
+}
+
 
 formCreateAccount.addEventListener("submit", saveAndCreateText);
 importTextForm.addEventListener('submit', parseTextArea);
