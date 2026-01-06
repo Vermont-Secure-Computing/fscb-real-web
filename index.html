@@ -114,6 +114,11 @@
                 <a class="gettxbuilderClick" href="#txbuilder">TX Builder</a>
               </li> -->
 
+              <hr class="bg-gray-500 opacity-10 dark:opacity-50"/>
+              <li class="list-disc marker:text-cyan-400 px-4 text-white font-semibold text-xl py-2 rounded-t">
+                <a class="getApiKeyClick" href="#apikey">API Key</a>
+              </li>
+
             </ul>
           </ul>
         </aside>
@@ -121,6 +126,9 @@
 
         <!-- Tab Contents -->
         <div class="px-2 md:px-4 lg:px-12 col-span-12 md:col-span-9 h-screen bg-[#1a1a1a]" id="tab-contents" >
+          <div id="global-api-banner" class="hidden p-3 bg-red-100 text-white text-sm">
+            API is not configured. Go to <b>API Key</b> tab to enable Balance/UTXO/Broadcast.
+          </div>
           <div id="importText" class="hidden p-2 md:p-4">
             <div class="mx-auto max-h-80" id="import-area">
               <p class="text-xl text-white font-bold">Welcome to FSCB</p>
@@ -132,6 +140,9 @@
                 </div>
               </form>
             </div>
+
+            
+
             <div class="mx-auto hidden" id="import-show">
               <p class="text-xl text-white font-bold">Request for Banker</p>
               <hr class="my-3 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
@@ -981,6 +992,47 @@
 
             </div>
           </section>
+
+          <section id="apikey" class="hidden">
+            <div class="p-6">
+              <h2 class="text-white text-2xl font-semibold mb-4">API Provider Setup</h2>
+
+              <div id="api-warning" class="hidden p-3 rounded bg-red-900/40 text-red-200 mb-4">
+                API is not configured. Balance/UTXO/Broadcast will not work until you set a provider.
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-white text-sm mb-1">Provider</label>
+                  <select id="api-provider" class="w-full p-2 rounded border text-black">
+                    <option value="">-- Not set --</option>
+                    <option value="blockcypher">BlockCypher</option>
+                    <option value="mempool">Mempool.space</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-white text-sm mb-1">API Key / Token (optional)</label>
+                  <input id="api-token" class="w-full p-2 rounded border text-black" placeholder="Paste token if needed"/>
+                  <div class="text-xs text-gray-300 mt-1">
+                    If empty, public endpoints will be used (rate limits may apply).
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 flex gap-2">
+                <button id="api-save" class="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600">
+                  Save
+                </button>
+                <button id="api-clear" class="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600">
+                  Clear
+                </button>
+              </div>
+
+              <div id="api-status" class="mt-3 text-sm hidden"></div>
+            </div>
+          </section>
+
 
 
 
