@@ -195,14 +195,30 @@ tabTogglers.forEach(function(toggler) {
 /**
  * Api key helpers
  */
-const DEFAULT_PROVIDER = "mempool";
 const API_PROVIDERS = {
-  mempool: {
-    label: "mempool.space",
-    supports: { balance: true, utxo: true, broadcast: true },
-  },
   blockcypher: {
     label: "BlockCypher",
+    supports: { balance: true, utxo: true, broadcast: true },
+    balanceUrl: (currency, address, token) => {
+      const base = blockcypherBase(currency);
+      return withToken(`${base}/addrs/${encodeURIComponent(address)}/balance`, token);
+    },
+    utxoUrl: (currency, address, token) => {
+      // best endpoint for UTXOs is `?unspentOnly=true&includeScript=true`
+      const base = blockcypherBase(currency);
+      return withToken(
+        `${base}/addrs/${encodeURIComponent(address)}?unspentOnly=true&includeScript=true`,
+        token
+      );
+    },
+    broadcastUrl: (currency, token) => {
+      const base = blockcypherBase(currency);
+      return withToken(`${base}/txs/push`, token);
+    },
+  },
+
+  mempool: {
+    label: "mempool.space",
     supports: { balance: true, utxo: true, broadcast: true },
   },
 };
@@ -212,12 +228,12 @@ function getApiConfig() {
   try {
     const cfg = JSON.parse(localStorage.getItem("api_config") || "{}");
 
-    // default provider == mempool
-    if (!cfg.provider) cfg.provider = DEFAULT_PROVIDER;
+    // default provider == blockcypher
+    if (!cfg.provider) cfg.provider = "blockcypher";
 
     return cfg;
   } catch {
-    return { provider: DEFAULT_PROVIDER, token: "" };
+    return { provider: "blockcypher", token: "" };
   }
 }
 
@@ -232,6 +248,7 @@ function apiConfigured() {
 
 function renderApiBanner(msg) {
   const banner = document.getElementById("global-api-banner");
+  console.log("render api banner: ", banner)
   if (!banner) return;
   if (!msg) return;
   
@@ -287,13 +304,13 @@ function initApiKeyTab() {
   });
 
   clearBtn.addEventListener("click", () => {
-    setApiConfig({ provider: DEFAULT_PROVIDER, token: ""});
-    providerEl.value = DEFAULT_PROVIDER;
+    setApiConfig({ provider: "blockcypher", token: ""});
+    providerEl.value = "blockcypher";
     tokenEl.value = "";
     renderWarn();
     //renderApiBanner();
     //setStatus("Token cleared. Using public BlockCypher API (rate limited).", false);
-    alertError(`Token cleared. Using public ${DEFAULT_PROVIDER} API (rate limited).`)
+    alertError("Token cleared. Using public BlockCypher API (rate limited).")
   });
 
   renderWarn();
@@ -341,219 +358,108 @@ function withToken(url) {
 }
 
 async function apiGetBalance(address, currency) {
+  console.log("get balance")
   requireApiConfigured();
   const cfg = getApiConfig();
-  //console.log("config: ", cfg)
-  if (cfg.provider === "blockcypher") {
-    const base = blockcypherBase(currency);
-    const url = withToken(`${base}/addrs/${encodeURIComponent(address)}/balance`);
+  if (cfg.provider !== "blockcypher") throw new Error("Unsupported provider");
 
-    const res = await fetch(url);
-    const body = await res.json().catch(() => ({}));
+  const base = blockcypherBase(currency);
+  const url = withToken(`${base}/addrs/${encodeURIComponent(address)}/balance`);
 
-    if (!res.ok) {
-      const msg =
-        (res.status === 429 ? "Rate limited (429). Try again later or set a valid token." : null) ||
-        body?.error ||
-        (Array.isArray(body?.errors)
-          ? body.errors.map(e => e?.error || e?.message).filter(Boolean).join(" | ")
-          : body?.errors) ||
-        "Balance fetch failed";
-      throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
-    }
+  const res = await fetch(url);
+  const body = await res.json().catch(() => ({}));
 
-    return {
-      confirmed: (body.final_balance || 0) / 1e8,
-      unconfirmed: (body.unconfirmed_balance || 0) / 1e8,
-    };
+  console.log("body: ", body)
+  if (!res.ok) {
+    const msg =
+      body?.error ||
+      (Array.isArray(body?.errors)
+        ? body.errors.map(e => e?.error || e?.message).filter(Boolean).join(" | ")
+        : body?.errors) ||
+      "Balance fetch failed";
+    throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
 
-  if (cfg.provider === "mempool") {
-    const base = mempoolBase(currency);
-    const url = `${base}/address/${encodeURIComponent(address)}`;
-
-    const res = await fetch(url);
-    const body = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      const msg =
-        (res.status === 429 ? "Rate limited (429). Try again later." : null) ||
-        body?.error ||
-        "Balance fetch failed";
-      throw new Error(msg);
-    }
-
-    const chain = body?.chain_stats || {};
-    const memp = body?.mempool_stats || {};
-
-    const confirmedSats =
-      (chain.funded_txo_sum || 0) - (chain.spent_txo_sum || 0);
-
-    const unconfirmedSats =
-      (memp.funded_txo_sum || 0) - (memp.spent_txo_sum || 0);
-
-    return {
-      confirmed: confirmedSats / 1e8,
-      unconfirmed: unconfirmedSats / 1e8,
-    };
-  }
-
-  throw new Error("Unsupported provider");
+  return {
+    confirmed: (body.final_balance || 0) / 1e8,
+    unconfirmed: (body.unconfirmed_balance || 0) / 1e8,
+  };
 }
-
 
 
 async function apiGetUtxos(address, currency) {
   requireApiConfigured();
   const cfg = getApiConfig();
+  if (cfg.provider !== "blockcypher") throw new Error("Unsupported provider");
 
-  if (cfg.provider === "blockcypher") {
-    const base = blockcypherBase(currency);
-    const url = withToken(
-      `${base}/addrs/${encodeURIComponent(address)}?unspentOnly=true&includeScript=true`
-    );
+  const base = blockcypherBase(currency);
+  const url = withToken(
+    `${base}/addrs/${encodeURIComponent(address)}?unspentOnly=true&includeScript=true`
+  );
 
-    const res = await fetch(url);
-    const body = await res.json();
+  const res = await fetch(url);
+  const body = await res.json();
 
-    if (!res.ok) {
-      const msg =
-        (res.status === 429 ? "Rate limited (429). Try again later or set a valid token." : null) ||
-        body?.error ||
-        "UTXO fetch failed";
-      throw new Error(msg);
-    }
+  if (!res.ok) throw new Error(body?.error || "UTXO fetch failed");
 
-    const refs = body?.txrefs || [];
-    const unconfirmed = body?.unconfirmed_txrefs || [];
+  // Normalize to your existing withdrawal renderer expectation:
+  // listP[i].hash, listP[i].index, listP[i].value, listP[i].script
+  const refs = body?.txrefs || []; // confirmed UTXOs
+  const unconfirmed = body?.unconfirmed_txrefs || [];
 
-    return refs.concat(unconfirmed).map((u) => ({
-      hash: u.tx_hash,
-      index: u.tx_output_n,
-      value: (u.value || 0) / 1e8,
-      script: u.script || "",
-    }));
-  }
+  const all = refs.concat(unconfirmed).map((u) => ({
+    hash: u.tx_hash,
+    index: u.tx_output_n,
+    value: (u.value || 0) / 1e8,
+    script: u.script || "", // important: includeScript=true
+  }));
 
-  if (cfg.provider === "mempool") {
-    const base = mempoolBase(currency);
-
-    // 1) fetch utxos list
-    const utxoUrl = `${base}/address/${encodeURIComponent(address)}/utxo`;
-    const res = await fetch(utxoUrl);
-    const utxos = await res.json().catch(() => []);
-
-    if (!res.ok || !Array.isArray(utxos)) {
-      throw new Error(
-        res.status === 429 ? "Rate limited (429). Try again later." : "UTXO fetch failed"
-      );
-    }
-
-    // 2) fetch tx details for scriptpubkey (cache per txid)
-    const txCache = new Map();
-
-    async function getTx(txid) {
-      if (txCache.has(txid)) return txCache.get(txid);
-      const r = await fetch(`${base}/tx/${encodeURIComponent(txid)}`);
-      const b = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(b?.error || `Failed to fetch tx ${txid}`);
-      txCache.set(txid, b);
-      return b;
-    }
-
-    // Safety: don’t explode calls
-    const MAX_UTXOS = 50;
-    const trimmed = utxos.slice(0, MAX_UTXOS);
-
-    const out = [];
-    for (const u of trimmed) {
-      const txid = u.txid;
-      const vout = Number(u.vout);
-      const valueSats = Number(u.value || 0);
-
-      if (!txid || !Number.isInteger(vout) || vout < 0) continue;
-
-      const tx = await getTx(txid);
-      const v = (tx?.vout || [])[vout];
-      const script = (v?.scriptpubkey || "").trim();
-
-      // Normalize to your format
-      out.push({
-        hash: txid,
-        index: vout,
-        value: valueSats / 1e8,
-        script,
-      });
-    }
-
-    return out;
-  }
-
-  throw new Error("Unsupported provider");
+  return all;
 }
-
 
 async function apiBroadcastTx(rawTxHex, currency) {
   requireApiConfigured();
   const cfg = getApiConfig();
-  const hex = (rawTxHex || "").trim();
-  if (!hex) throw new Error("Missing raw transaction hex");
+  if (cfg.provider !== "blockcypher") throw new Error("Unsupported provider");
 
-  if (cfg.provider === "blockcypher") {
-    const base = blockcypherBase(currency);
-    const url = withToken(`${base}/txs/push`);
+  const base = blockcypherBase(currency);
+  const url = withToken(`${base}/txs/push`);
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Accept": "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ tx: hex }),
-    });
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({ tx: (rawTxHex || "").trim() }),
+  });
 
-    const body = await res.json().catch(() => ({}));
+  const body = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      const msg =
-        (res.status === 429 ? "Rate limited (429). Try again later or set a valid token." : null) ||
-        body?.error ||
-        (Array.isArray(body?.errors)
-          ? body.errors.map(e => e?.error || e?.message).filter(Boolean).join(" | ")
-          : body?.errors) ||
-        "Broadcast failed";
-      throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
-    }
+  // ---- error path -----
+  if (!res.ok) {
+    // BlockCypher often returns: { error: "..." } OR { errors: [{ error: "..." }, ...] }
+    const msg =
+      body?.error ||
+      (Array.isArray(body?.errors)
+        ? body.errors.map(e => e?.error || e?.message).filter(Boolean).join(" | ")
+        : body?.errors) ||
+      "Broadcast failed";
 
-    const txid = body?.tx?.hash;
-    if (!txid) throw new Error("Broadcast failed (no tx hash returned)");
-    return { txid, raw: body };
+    throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
 
-  if (cfg.provider === "mempool") {
-    const base = mempoolBase(currency);
-    const url = `${base}/tx`;
-
-    const res = await fetch(url, {
-      method: "POST",
-      // mempool expects raw hex text
-      headers: { "Content-Type": "text/plain" },
-      body: hex,
-    });
-
-    const text = await res.text().catch(() => "");
-    if (!res.ok) {
-      const msg =
-        (res.status === 429 ? "Rate limited (429). Try again later." : null) ||
-        text ||
-        "Broadcast failed";
-      throw new Error(msg);
-    }
-
-    // success is txid string
-    return { txid: (text || "").trim(), raw: { result: text } };
+  // ---- success path ----
+  const txid = body?.tx?.hash;
+  if (!txid) {
+    const msg =
+      body?.error ||
+      (Array.isArray(body?.errors)
+        ? body.errors.map(e => e?.error || e?.message).filter(Boolean).join(" | ")
+        : body?.errors) ||
+      "Broadcast failed (no tx hash returned)";
+    throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
 
-  throw new Error("Unsupported provider");
+  return { txid, raw: body };
 }
-
 
 /**
  * End of Blockcypher
@@ -607,7 +513,7 @@ async function readBankersFile() {
 
 /* get balance from api */
 async function balanceApi() {
-    //console.log("balance api")
+    console.log("balance api")
     const allaccount = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : null
     if (allaccount) {
 
@@ -989,7 +895,7 @@ function accountTxidDisplay(domElement, txid, w_id, banker_id, screen) {
   
   if (txid) {
     let id = screen === "web" ? 'view-txid-btn-' + String(w_id) + String(banker_id) : 'mobile-view-txid-btn-' + String(w_id) + String(banker_id)
-    //console.log("id: ", id)
+    console.log("id: ", id)
     let viewBtn = "<button class='ml-4 disabled:opacity-75 bg-blue-500 active:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' id='"+id+"'>View</button>"
     domElement.innerHTML = viewBtn
     
@@ -1179,7 +1085,7 @@ async function accountWithdrawalFunc(address) {
   try {
     CHANGE_ADDRESS = address.address;
     CURRENT_REDEEMSCRIPT = address.redeemscript;
-    //console.log("current redeemscript: ", address, address.redeemscript)
+    console.log("current redeemscript: ", address, address.redeemscript)
 
     // pick coin engine
     let coin_js;
@@ -1281,7 +1187,7 @@ async function accountWithdrawalFunc(address) {
     }
 
     // ---------- Render API UTXOs ----------
-    //console.log("listP: ", listP)
+    console.log("listP: ", listP)
     if (Array.isArray(listP) && listP.length) {
       for (let i = 0; i < listP.length; i++) {
         let listPAmount, listPTXID, listPvout;
@@ -1320,7 +1226,7 @@ async function accountWithdrawalFunc(address) {
         input3.setAttribute("class", "hidden");
         input3.setAttribute("id", "script-withdraw");
         input3.value = addressScript.redeemscript;
-        //console.log("api generated script: ", addressScript.redeemscript)
+        console.log("api generated script: ", addressScript.redeemscript)
 
         const input4 = document.createElement("input");
         input4.setAttribute(
@@ -1561,7 +1467,7 @@ async function unspentApi(address) {
     } else if (address.currency === "bitcoin" || address.currency === "litecoin") {
       try {
         const utxos = await apiGetUtxos(address.address, address.currency);
-        //console.log("utxos: ", utxos)
+        console.log("utxos: ", utxos)
         return { utxo: utxos, currency: address.currency };
       } catch (e) {
         console.log("UTXO fetch error:", e);
@@ -2351,7 +2257,7 @@ async function bankerSignatureResponse(message) {
   } catch (_) {
     bankerCheckResult = false;
   }
-  //console.log("banker check result: ", bankerCheckResult);
+  console.log("banker check result: ", bankerCheckResult);
 
   const accounts = localStorage.getItem("accounts")
     ? JSON.parse(localStorage.getItem("accounts"))
@@ -2476,7 +2382,7 @@ async function withdrawReadyToBroadcast(message) {
 
 /* broadcast transaction */
 async function withdrawalApi(message) {
-  //console.log("withdrawal: ", message)
+  console.log("withdrawal: ", message)
   const txid = message.transaction_id
 	const accountId = message.id
 	const withdrawalId = message.withdrawal_id
@@ -2584,10 +2490,6 @@ function withdrawalBroadcastResponse(res) {
   let closeButton = document.getElementById("owner-withdrawal-close-button")
   closeButton.addEventListener('click', () => {
     showImportListScreen()
-    // reset broadcast and error messages
-    broadcastButton.classList.remove('hidden')
-    withdrawalErrorResponseContainer.classList.add('hidden')
-    withdrawalErrorResponse.innerHTML = ""
   })
 
   if(res.message){
@@ -2983,10 +2885,10 @@ function bankerSignTransaction(message, privkey) {
   const scriptToSign = tx.deserialize(message.transaction_id_for_signature)
   const signedTX = scriptToSign.sign(privkey, 1)
 
-  //console.log("SIGNED TX:", signedTX);
+  console.log("SIGNED TX:", signedTX);
   const looksSigned = /(?:4730|4830|4930|4a30)/i.test(signedTX);
-  //console.log("looksSigned:", looksSigned);
-  //console.log("SIGNED TX contains DER sig marker 30?:", signedTX.includes("30"));
+  console.log("looksSigned:", looksSigned);
+  console.log("SIGNED TX contains DER sig marker 30?:", signedTX.includes("30"));
 
   bankerVerifyWithdrawal.classList.add('hidden')
   bankerMessageSignTx.classList.remove('hidden')
@@ -3245,8 +3147,8 @@ async function bankerPubkeyResponse(evt) {
 
 /* Create contract */
 async function saveAndCreateText(e) {
-    //console.log("save and create text function")
-    //console.log("selected currency: ", currency.value)
+    console.log("save and create text function")
+    console.log("selected currency: ", currency.value)
     e.preventDefault();
     
     const contractSendName = removeTagsFromInput(contractName.value);
@@ -3259,7 +3161,7 @@ async function saveAndCreateText(e) {
     const coinCurrencySend = currency.value;
     const innerMultiKey = document.querySelectorAll('.activeClass a')
 
-    //console.log("coinCurrencySend: ", coinCurrencySend)
+    console.log("coinCurrencySend: ", coinCurrencySend)
 
 
 
@@ -3293,12 +3195,12 @@ async function saveAndCreateText(e) {
     }
 
 
-    // console.log("coin_js selected:", coinCurrencySend);
-    // console.log("coin_js.pub:", coin_js.pub);
-    // console.log("coin_js.priv:", coin_js.priv);
-    // console.log("coin_js.multisig:", coin_js.multisig);
-    // console.log("coin_js.script:", coin_js.script);
-    // console.log("coin_js.bech32:", coin_js.bech32);
+    console.log("coin_js selected:", coinCurrencySend);
+    console.log("coin_js.pub:", coin_js.pub);
+    console.log("coin_js.priv:", coin_js.priv);
+    console.log("coin_js.multisig:", coin_js.multisig);
+    console.log("coin_js.script:", coin_js.script);
+    console.log("coin_js.bech32:", coin_js.bech32);
 
     const keys = bankersMerge;
     const multisig =  coin_js.pubkeys2MultisigAddress(keys, sigSendNumber);
@@ -3583,7 +3485,7 @@ async function contractnew (options) {
   withdrawAmountInput.addEventListener('change', () => {amountOnchange(withdrawAmountInput.value)})
 
   function checkTxFee(e) {
-    //console.log("check tx fee function")
+    console.log("check tx fee function")
     e.preventDefault()
     let withdrawFeeInput = document.getElementById("withdraw-fee")
     let userInputtedFee = Number(withdrawFeeInput.value || 0)
@@ -3591,13 +3493,13 @@ async function contractnew (options) {
     let change = Number((unspentAmountTotal - TOTAL_AMOUNT_TO_WITHDRAW).toFixed(8))
 
     if (unspentAmountTotal < TOTAL_AMOUNT_TO_WITHDRAW) {
-      //console.log("Insufficient balance. Please adjust the withdrawal amount.")
+      console.log("Insufficient balance. Please adjust the withdrawal amount.")
       alertError("Insufficient balance. Please adjust the withdrawal amount.")
       return
     }
 
     if (userInputtedFee == change) {
-      //console.log("userInputtedFee == change")
+      console.log("userInputtedFee == change")
       if (change > 0.001) {
         let text = "Current transaction fee is high. If you want to proceed, click Ok";
         if (confirm(text) == true) {
