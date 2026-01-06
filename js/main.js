@@ -1376,7 +1376,7 @@ async function accountWithdrawalFunc(address) {
       addText.id = "manual-vins-add";
       addText.className =
         "text-sm md:text-base text-blue-600 hover:text-blue-700 underline underline-offset-4";
-      addText.textContent = "Add manual v-ins";
+      addText.textContent = "Add manual utxos";
 
       addWrap.appendChild(addText);
 

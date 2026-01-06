@@ -793,6 +793,107 @@
 
               <hr class="my-5 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
 
+              <p class="text-black text-lg py-2 px-5 font-bold">API Provider Setup (Required)</p>
+
+              <p class="text-black px-5 mt-4 font-normal text-base">
+              This application requires a blockchain API provider to fetch balances, unspent outputs (UTXOs), and broadcast transactions.
+              </p>
+
+              <p class="text-black px-5 mt-3 font-normal text-base">
+              By default, the app uses <b>mempool.space</b>. You may optionally enter your own API key to avoid rate limits.
+              </p>
+
+              <img class="ml-12 mt-4" src="./assets/imgs/api_provider_section.png" alt="api-provider-section" />
+
+              <p class="text-black px-5 mt-6 font-normal text-base">
+              <b>Steps:</b>
+              </p>
+
+              <p class="text-black px-5 mt-2 font-normal text-base">
+              1. Go to the <b>API Key</b> tab from the left menu.
+              </p>
+
+              <p class="text-black px-5 mt-2 font-normal text-base">
+              2. Select an API provider (currently mempool).
+              </p>
+
+              <p class="text-black px-5 mt-2 font-normal text-base">
+              3. (Optional) Paste your API key or token.
+              </p>
+
+              <p class="text-black px-5 mt-2 font-normal text-base">
+              4. Click <b>Save</b>.
+              </p>
+
+              <p class="text-black px-5 mt-4 font-normal text-base">
+              This app uses <b>Mempool.space</b> as the default blockchain data provider and works out of the box without an API key.
+              </p>
+
+              <p class="text-black px-5 mt-2 font-normal text-base">
+              However, public endpoints are rate-limited. To avoid request limits or to use other providers in the future, you may optionally configure your own API key in the <b>API Key</b> tab.
+              </p>
+
+
+              <hr class="my-5 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
+
+
+              <p class="text-black text-lg py-2 px-5 font-bold">Manual Transaction Inputs (Manual UTXOs)</p>
+
+              <p class="text-black px-5 mt-4 font-normal text-base">
+              By default, the app automatically fetches unspent outputs (UTXOs) using the configured API provider.
+              </p>
+
+              <p class="text-black px-5 mt-3 font-normal text-base">
+              For advanced users, it is also possible to manually add transaction inputs (utxos).
+              </p>
+
+              <img class="ml-12 mt-4" src="./assets/imgs/adding_manual_utxos.png" alt="api-provider-section" />
+
+              <p class="text-black px-5 mt-4 font-normal text-base">
+              <b>When to use Manual V-UTXOs:</b>
+              </p>
+
+              <ul class="text-black px-10 mt-2 list-disc font-normal text-base">
+                <li>If an API is unavailable or rate-limited</li>
+                <li>If you want to spend a specific UTXO</li>
+                <li>If you already know the transaction details</li>
+              </ul>
+
+              <p class="text-black px-5 mt-4 font-normal text-base">
+                <b>Required fields:</b>
+              </p>
+
+              <ul class="text-black px-10 mt-2 list-disc font-normal text-base">
+                <li>Transaction ID (TXID)</li>
+                <li>Output index (VOUT) <span class="text-sm text-gray-600">(default is 0)</span></li>
+                <li>Script <span class="text-sm text-gray-600">(redeem script / prevout script)</span></li>
+                <li>Amount</li>
+              </ul>
+
+              <p class="text-black px-5 mt-4 font-normal text-base">
+                You can copy these values from API-generated UTXOs or from a block explorer.
+              </p>
+
+              <p class="text-black px-5 mt-3 font-normal text-base">
+                If you need to edit the <b>VOUT</b> index or the <b>Script</b>, click the <b>gear icon</b> to show those input fields.
+              </p>
+
+              <p class="text-black px-5 mt-3 font-normal text-base">
+                Manual V-INs are included in the transaction only if their checkbox is selected.
+              </p>
+
+              <p class="text-black px-5 mt-3 font-normal text-base">
+                To remove a manual UTXO, click the <b>delete</b> button.
+              </p>
+
+
+              <p class="text-black px-5 mt-4 font-normal text-base">
+              <b>Warning:</b> Incorrect values may result in an invalid or rejected transaction.
+              </p>
+
+
+              <hr class="my-5 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50"/>
+
               <p class="text-black text-lg py-2 px-5 font-bold">Withdrawing Funds:</p>
               <p class="text-black px-5 mt-8 font-normal text-base">Go to Account List</p>
               <img class="ml-12 mt-4" src="./assets/imgs/instructions_fund_withdrawal_1.png" alt="banker-pubkey-instruction-1" />
@@ -800,7 +901,7 @@
               <img class="ml-12 mt-4" src="./assets/imgs/instructions_fund_withdrawal_2.png" alt="banker-pubkey-instruction-1" />
               <p class="text-black px-5 mt-8 font-normal text-base">Click Withdraw (The withdrawal option is disabled when a contract doesn't have funds.)</p>
               <img class="ml-12 mt-4" src="./assets/imgs/instructions_fund_withdrawal_3.png" alt="banker-pubkey-instruction-1" />
-              <p class="text-black px-5 mt-8 font-normal text-base">Click the checkbox of the transaction inputs you want to witdraw</p>
+              <p class="text-black px-5 mt-8 font-normal text-base">Click the checkbox of the transaction inputs you want to witdraw. You may also add manual transaction inputs (V-INs) if needed.</p>
               <img class="ml-12 mt-4" src="./assets/imgs/instructions_fund_withdrawal_4.png" alt="banker-pubkey-instruction-1" />
               <p class="text-black px-5 mt-8 font-normal text-base">Enter recipient address</p>
               <img class="ml-12 mt-4" src="./assets/imgs/instructions_fund_withdrawal_5.png" alt="banker-pubkey-instruction-1" />
