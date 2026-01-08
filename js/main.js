@@ -84,9 +84,9 @@ let TOTAL_AMOUNT_TO_WITHDRAW = 0
 let CHANGE_ADDRESS
 let CHANGE_AMOUNT
 let DONATION_LOG = 'WhAiyvrEhG6Ty9AkTb1hnUwbT3PubdWkAg'
-let DONATION_BTC = 'WhAiyvrEhG6Ty9AkTb1hnUwbT3PubdWkAg'
-let DONATION_LTC = 'WhAiyvrEhG6Ty9AkTb1hnUwbT3PubdWkAg'
-let DONATION_ADDRESS = 'WhAiyvrEhG6Ty9AkTb1hnUwbT3PubdWkAg'
+let DONATION_BTC = '3QgAVe5W8EpRUKk7ucmA2Ra3suYzC4yRE4'
+let DONATION_LTC = 'MQDbDfTKe3SUNGmrKF3DsjSWhwX2BBzJtw'
+let DONATION_ADDRESS = '3QgAVe5W8EpRUKk7ucmA2Ra3suYzC4yRE4'
 let WITHDRAWAL_FEE = 0.01
 
 /**
@@ -363,7 +363,7 @@ async function apiGetBalance(address, currency) {
     }
 
     return {
-      confirmed: (body.final_balance || 0) / 1e8,
+      confirmed: ((body.final_balance || 0) / 1e8) + ((body.unconfirmed_balance || 0) / 1e8),
       unconfirmed: (body.unconfirmed_balance || 0) / 1e8,
     };
   }
@@ -393,7 +393,7 @@ async function apiGetBalance(address, currency) {
       (memp.funded_txo_sum || 0) - (memp.spent_txo_sum || 0);
 
     return {
-      confirmed: confirmedSats / 1e8,
+      confirmed: (confirmedSats / 1e8) + (unconfirmedSats / 1e8),
       unconfirmed: unconfirmedSats / 1e8,
     };
   }
